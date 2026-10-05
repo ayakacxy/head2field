@@ -6,10 +6,10 @@
 
 **Continuous neural fields for subject-specific tES lead-field prediction.**
 
-[![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
-[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](pyproject.toml)
-[![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat-square)](docs/en/preprocessing.md)
-[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat-square)](docs/LICENSE_GUIDE.md)
+[![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat&logo=python&logoColor=white)](pyproject.toml)
+[![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)](pyproject.toml)
+[![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat)](docs/en/preprocessing.md)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat)](docs/LICENSE_GUIDE.md)
 
 [Installation](#installation) · [Quick start](#quick-start) · [Documentation](#documentation) · [Reproduction](#reproduction) · [Citation](#citation)
 
