@@ -8,7 +8,7 @@
 
 ## 概览
 
-Head2Field v1 结合解剖编码、查询特征和电极几何，预测 75 个 source→Oz 先导场。固定工厂及严格权重 schema 保证训练与推理使用一致结构。模型合同如下；用途与局限见[模型说明](../../MODEL_CARD_zh.md)。[代码阅读指南](code_guide.md)给出各阶段的实现位置和网络张量维度。
+Head2Field v1 结合解剖编码、查询特征和电极几何，预测 75 个 source→Oz 先导场。固定工厂及严格权重 schema 保证训练与推理使用一致结构。模型合同如下；用途与局限见[模型说明](../MODEL_CARD_zh.md)。[代码阅读指南](code_guide.md)给出各阶段的实现位置和网络张量维度。
 
 <a id="input-streams"></a>
 

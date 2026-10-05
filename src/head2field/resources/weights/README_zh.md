@@ -27,4 +27,4 @@ model = load_head2field_v1_weights(device="cpu")
 新训练产物需要独立评价。
 
 本次代码更新对齐论文训练设置，尚未重新训练随包权重。分发时保留模型版本、架构、许可证和
-[数据使用说明](../DATA_USE.md)。完整 API 见[推理说明](../docs/zh/inference.md)。
+[数据使用说明](../docs/DATA_USE.md)。完整 API 见[推理说明](../docs/zh/inference.md)。

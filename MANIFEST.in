@@ -1,18 +1,9 @@
 include README.md
 include README_zh.md
-include *_zh.md
-include CITATION_GUIDE.md
-include LICENSE_GUIDE.md
 include LICENSE
 include CITATION.cff
-include CHANGELOG.md
-include RELEASE_CHECKLIST.md
-include CONTRIBUTING.md
-include MODEL_CARD.md
-include DATA_USE.md
-include SOURCE_PROVENANCE.md
-include THIRD_PARTY_NOTICES.md
 include pyproject.toml
+include .markdownlint.json
 
 graft configs
 graft schemas

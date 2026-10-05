@@ -18,7 +18,7 @@ proposed change interacts with the v1 input/output contract.
 
 ## Development setup
 
-From a source checkout:
+From the repository root of a source checkout:
 
 ```bash
 python -m pip install -e '.[dev]'
@@ -60,7 +60,7 @@ whole suite. For example, inference/weight changes use
 packaged-document changes use `tests/test_packaging_resources.py`.
 After checks finish, remove only the task files and directories you created.
 
-Read the [code guide](docs/en/code_guide.md) for the package map, tensor conventions,
+Read the [code guide](en/code_guide.md) for the package map, tensor conventions,
 and data flow before changing model or training code.
 
 ## Prepare a contribution
@@ -88,14 +88,28 @@ scientific accuracy and generalization need appropriate evaluation data.
 
 ## Documentation language
 
-Public API names, source comments, docstrings, and CLI help use English.
+Public API names and CLI help use English. New source comments and docstrings
+use Chinese.
 Maintain technical guides in `docs/en/` and `docs/zh/` with matching filenames.
-Root-level, example, and weight documents retain their `_zh.md` companions.
+Project guides in `docs/`, root READMEs, example documents, and weight documents
+retain their `_zh.md` companions.
 Keep commands, scientific conventions, and training settings aligned.
 Body links stay in the current language; the language
 switch opens the same document in the other language. Synchronize shipped
 documents with their copies in `src/head2field/resources/`. The
-[documentation index](docs/en/README.md) lists all guides.
+[documentation index](en/README.md) lists all guides.
+
+## Attribution
+
+The project author and maintainer is [ayakacxy](https://github.com/ayakacxy).
+Codex (OpenAI) contributes development, documentation, and verification
+assistance. Record the actual author of each commit. For commits authored by
+ayakacxy with Codex participation, add the following trailer to the commit
+message after a blank line:
+
+```text
+Co-authored-by: Codex <codex@openai.com>
+```
 
 ## Data, dependencies, and licensing
 

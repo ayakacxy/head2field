@@ -40,7 +40,7 @@ v1 合同固定以下内容：
 - 上述电流约定与输出单位；
 - 固定参数名和张量形状的严格 FP32 权重加载。
 
-机器可读细节见[输入合同](docs/zh/input_contract.md)、[模型结构](docs/zh/model_architecture.md)和[数据合同](docs/zh/data_contracts.md)。
+机器可读细节见[输入合同](zh/input_contract.md)、[模型结构](zh/model_architecture.md)和[数据合同](zh/data_contracts.md)。
 
 <a id="training"></a>
 
@@ -69,7 +69,7 @@ v1 参考权重文件包含：
 | 标量总数 | 2,607,870 |
 | 文件大小 | 10,497,106 bytes |
 
-文件不包含优化器、调度器、scaler、步数、epoch、指标、manifest、参与者标识、路径、采样器或 RNG 状态。张量名和形状匹配 v1 工厂。wheel 和源码分发包内置这些预训练权重，并默认加载。参见[权重说明](weights/README_zh.md)和[数据使用说明](DATA_USE_zh.md)。
+文件不包含优化器、调度器、scaler、步数、epoch、指标、manifest、参与者标识、路径、采样器或 RNG 状态。张量名和形状匹配 v1 工厂。wheel 和源码分发包内置这些预训练权重，并默认加载。参见[权重说明](../weights/README_zh.md)和[数据使用说明](DATA_USE_zh.md)。
 
 <a id="intended-use"></a>
 

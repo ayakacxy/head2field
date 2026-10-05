@@ -31,5 +31,5 @@ resume only. Each new training output needs its own evaluation.
 
 This code update aligns the training recipe with the manuscript; it does not
 retrain the bundled asset. Keep the model version, architecture, license, and
-[data-use notice](../DATA_USE.md) with distributed weights. See
+[data-use notice](../docs/DATA_USE.md) with distributed weights. See
 [inference](../docs/en/inference.md) for the prediction API.

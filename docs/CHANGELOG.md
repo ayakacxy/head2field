@@ -14,6 +14,9 @@ create a new trained model.
   with same-language navigation, per-page language switches, and bundled copies.
 - Group technical guides in `docs/en/` and `docs/zh/` with matching filenames;
   route README reading links to the corresponding language guides.
+- Move supporting project documents into `docs/`, retain the two root READMEs,
+  and update navigation, package metadata, and bundled document copies.
+- Document contributor attribution and the Codex co-author trailer.
 - Add installed-wheel usage and code-reading guides, document chunking and
   source-current synthesis, and synchronize shipped technical documentation.
 - Clarify core tensor/coordinate APIs and English diagnostics; isolate inference

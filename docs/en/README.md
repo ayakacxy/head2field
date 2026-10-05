@@ -29,12 +29,12 @@ the language switch at the top opens the same guide in the other language.
 | Document | Contents |
 | --- | --- |
 | [Project overview](../../README.md) | Features, installation, quick start, and overview figure |
-| [Model card](../../MODEL_CARD.md) | Model inputs and outputs, intended use, assumptions, and limitations |
-| [Data use](../../DATA_USE.md) | Dataset acknowledgements, methods citations, and distribution scope |
-| [Contributing](../../CONTRIBUTING.md) | Development setup, compatibility, and focused verification |
-| [Release checklist](../../RELEASE_CHECKLIST.md) | Repository upload inventory and distribution verification |
-| [Source provenance](../../SOURCE_PROVENANCE.md) | Implementation origins and dependency boundaries |
-| [Third-party notices](../../THIRD_PARTY_NOTICES.md) | External software and bundled-weight notices |
-| [Changelog](../../CHANGELOG.md) | Software changes and model-contract versioning |
-| [Citation guide](../../CITATION_GUIDE.md) | Manuscript and software citation metadata |
-| [License guide](../../LICENSE_GUIDE.md) | Source license and related distribution notices |
+| [Model card](../MODEL_CARD.md) | Model inputs and outputs, intended use, assumptions, and limitations |
+| [Data use](../DATA_USE.md) | Dataset acknowledgements, methods citations, and distribution scope |
+| [Contributing](../CONTRIBUTING.md) | Development setup, compatibility, and focused verification |
+| [Release checklist](../RELEASE_CHECKLIST.md) | Repository upload inventory and distribution verification |
+| [Source provenance](../SOURCE_PROVENANCE.md) | Implementation origins and dependency boundaries |
+| [Third-party notices](../THIRD_PARTY_NOTICES.md) | External software and bundled-weight notices |
+| [Changelog](../CHANGELOG.md) | Software changes and model-contract versioning |
+| [Citation guide](../CITATION_GUIDE.md) | Manuscript and software citation metadata |
+| [License guide](../LICENSE_GUIDE.md) | Source license and related distribution notices |

@@ -145,11 +145,12 @@ tracked independently.
 For a readability refactor, use the existing small-model tests and compare the
 same inputs before and after. Changes to source/query indexing need checks for
 reordering, repeated IDs, shared references, and partial chunks. Loss changes
-need value and gradient comparisons. See [CONTRIBUTING.md](../../CONTRIBUTING.md)
+need value and gradient comparisons. See [CONTRIBUTING.md](../CONTRIBUTING.md)
 for development commands and focused verification.
 
-Public comments, docstrings, and CLI help use English. Keep every English guide
-aligned with its Chinese companion, including commands and scientific settings.
+Public API names and CLI help use English; new source comments and docstrings
+use Chinese. Keep every English guide aligned with its Chinese companion,
+including commands and scientific settings.
 After updating a shipped document, synchronize its copy in
 `src/head2field/resources/`; existing packaging tests verify the copies byte
 for byte.

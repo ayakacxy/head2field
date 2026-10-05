@@ -45,9 +45,9 @@ The v1 contract fixes:
 - the current convention and output units stated above; and
 - strict FP32 weight loading with fixed parameter keys and tensor shapes.
 
-See [input contracts](docs/en/input_contract.md),
-[architecture](docs/en/model_architecture.md), and
-[data contracts](docs/en/data_contracts.md) for the machine-readable details.
+See [input contracts](en/input_contract.md),
+[architecture](en/model_architecture.md), and
+[data contracts](en/data_contracts.md) for the machine-readable details.
 
 ## Training
 
@@ -69,7 +69,7 @@ The objective combines stable-energy data loss with circulation, WM/GM
 normal-current continuity, tangential-field continuity, and flux terms. Physics
 thresholds are fitted on training data. Group-disjoint train/validation/test
 partitions and asset paths are part of the run contract. See
-[training](docs/en/training.md) for loss settings, asset preparation, and resume.
+[training](en/training.md) for loss settings, asset preparation, and resume.
 
 ## Verified weight format
 
@@ -86,7 +86,7 @@ It contains no optimizer, scheduler, scaler, step, epoch, metric, manifest,
 participant identifier, path, sampler, or RNG state. Tensor keys and shapes
 match the v1 factory. These pretrained weights are bundled with the wheel and
 source distribution and selected by default; see
-[weight documentation](weights/README.md) and [data use](DATA_USE.md).
+[weight documentation](../weights/README.md) and [data use](DATA_USE.md).
 
 ## Intended use
 

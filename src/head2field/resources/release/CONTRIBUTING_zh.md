@@ -18,7 +18,7 @@
 
 ## 开发环境
 
-在源码目录中执行：
+在源码仓库根目录中执行：
 
 ```bash
 python -m pip install -e '.[dev]'
@@ -51,7 +51,7 @@ python -m compileall -q src tests examples
 
 对于范围明确的改动，只选择相关测试文件即可。例如，推理与权重改动使用 `tests/test_inference.py`、`tests/test_weights.py` 和 `tests/test_cli_smoke.py`；包内文档改动使用 `tests/test_packaging_resources.py`。检查结束后，仅清理本次任务创建的文件和目录。
 
-修改模型或训练代码前，请先阅读[代码指南](docs/zh/code_guide.md)，了解模块职责、张量约定与数据流。
+修改模型或训练代码前，请先阅读[代码指南](zh/code_guide.md)，了解模块职责、张量约定与数据流。
 
 <a id="prepare-a-contribution"></a>
 
@@ -75,12 +75,23 @@ v1 合同固定模型参数名及形状、组织语义、电导率缩放、world
 
 ## 文档语言
 
-公开 API 名称、源码注释、docstring 和 CLI 帮助使用英文。技术指南分别放在 `docs/en/` 和 `docs/zh/`，两边使用相同文件名；根目录、示例和权重文档保留对应的 `_zh.md` 文件。命令、科学约定和训练设置保持一致。正文链接保持当前语言，语言切换进入同一篇文档的另一语言版本。随包分发的文档需要同步到 `src/head2field/resources/`。全部指南见[文档目录](docs/zh/README.md)。
+公开 API 名称和 CLI 帮助使用英文，新增源码注释与 docstring 使用中文。技术指南分别放在 `docs/en/` 和 `docs/zh/`，两边使用相同文件名；`docs/` 中的项目说明、根目录 README、示例和权重文档保留对应的 `_zh.md` 文件。命令、科学约定和训练设置保持一致。正文链接保持当前语言，语言切换进入同一篇文档的另一语言版本。随包分发的文档需要同步到 `src/head2field/resources/`。全部指南见[文档目录](zh/README.md)。
+
+<a id="attribution"></a>
+
+## 贡献者署名
+
+项目作者与维护者是 [ayakacxy](https://github.com/ayakacxy)。Codex（OpenAI）协助开发、文档整理与验证。
+每次提交保留实际作者信息。对于 ayakacxy 作为作者且 Codex 参与的提交，在提交说明末尾空一行后加入：
+
+```text
+Co-authored-by: Codex <codex@openai.com>
+```
 
 <a id="data-dependencies-and-licensing"></a>
 
 ## 数据、依赖与许可证
 
-源码改动中不要加入参与者数据、队列清单、训练恢复状态或生成的研究输出。经过允许列表核验的预训练 v1 权重及校验文件是包资源，应保留其已验证的模型合同。参见[数据使用说明](DATA_USE_zh.md)和[权重说明](weights/README_zh.md)。
+源码改动中不要加入参与者数据、队列清单、训练恢复状态或生成的研究输出。经过允许列表核验的预训练 v1 权重及校验文件是包资源，应保留其已验证的模型合同。参见[数据使用说明](DATA_USE_zh.md)和[权重说明](../weights/README_zh.md)。
 
 记录复制或改编代码的来源与许可证。模板、图谱、数据集、二进制文件和其他第三方资产需要具备适当的分发条款。贡献应兼容项目的 [GPL-3.0-only 许可证](LICENSE_GUIDE_zh.md)。

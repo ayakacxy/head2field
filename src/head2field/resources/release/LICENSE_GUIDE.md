@@ -6,13 +6,13 @@
 
 Head2Field source code uses **GPL-3.0-only**, as recorded in
 `pyproject.toml` and `CITATION.cff`. The authoritative license text is
-[LICENSE](LICENSE). That text is distributed unchanged with the source and
+[LICENSE](../LICENSE). That text is distributed unchanged with the source and
 wheel; this guide provides a bilingual entry point to the project's notices.
 
 ## Weights, dependencies, and data
 
 The bundled pretrained model has its distribution notice in
-[weights](weights/README.md) and [data use](DATA_USE.md). External software
+[weights](../weights/README.md) and [data use](DATA_USE.md). External software
 licenses and implementation origins are described in
 [third-party notices](THIRD_PARTY_NOTICES.md) and
 [source provenance](SOURCE_PROVENANCE.md).

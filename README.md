@@ -9,7 +9,7 @@
 [![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](pyproject.toml)
 [![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat-square)](docs/en/preprocessing.md)
-[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat-square)](LICENSE_GUIDE.md)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat-square)](docs/LICENSE_GUIDE.md)
 
 [Installation](#installation) · [Quick start](#quick-start) · [Documentation](#documentation) · [Reproduction](#reproduction) · [Citation](#citation)
 
@@ -51,7 +51,7 @@ The current model is **Head2Field v1** (`Head2FieldV1`), configured in
 covers preprocessing, FEM supervision, training, and inference.
 Its output is a `[75, Q, 3]` basis at GM/WM query locations:
 75 source-to-Oz maps, world-RAS `[Ex, Ey, Ez]`, in `V/m` for source `+1 mA`
-and Oz `-1 mA`. See the [model card](MODEL_CARD.md) for research use,
+and Oz `-1 mA`. See the [model card](docs/MODEL_CARD.md) for research use,
 assumptions, and limitations.
 
 ## ✨ Features
@@ -201,26 +201,27 @@ data and cohort splits are obtained separately.
 - [Reproducibility and evaluation](docs/en/paper_reproduction.md)
 - [Machine-readable data contracts](docs/en/data_contracts.md)
 - [Code guide: modules, tensor shapes, and execution flow](docs/en/code_guide.md)
-- [Model card](MODEL_CARD.md), [data use](DATA_USE.md), and [weight format](weights/README.md)
+- [Model card](docs/MODEL_CARD.md), [data use](docs/DATA_USE.md), and [weight format](weights/README.md)
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development and verification,
-[SOURCE_PROVENANCE.md](SOURCE_PROVENANCE.md) for implementation origins, and
-[CHANGELOG.md](CHANGELOG.md) for changes. Synthetic examples check software
+See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development and verification,
+[SOURCE_PROVENANCE.md](docs/SOURCE_PROVENANCE.md) for implementation origins, and
+[CHANGELOG.md](docs/CHANGELOG.md) for changes. Synthetic examples check software
 behavior; reproducing paper results requires the corresponding data, weights,
-and evaluation protocol. Maintainers can use the [release checklist](RELEASE_CHECKLIST.md).
+and evaluation protocol. Maintainers can use the [release checklist](docs/RELEASE_CHECKLIST.md).
 
-Source comments, docstrings, and CLI help use English. All public guides have
-English and Simplified Chinese versions, with a language switch on each page.
+Public API names and CLI help use English; new source comments and docstrings
+use Chinese. All public guides have English and Simplified Chinese versions,
+with a language switch on each page.
 
 <a id="citation"></a>
 
 ## 📝 Citation and license
 
-The source code is licensed under [GPL-3.0-only](LICENSE_GUIDE.md). For third-party
+The source code is licensed under [GPL-3.0-only](docs/LICENSE_GUIDE.md). For third-party
 software and bundled model-weight provenance, see
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [DATA_USE.md](DATA_USE.md).
+[THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md) and [DATA_USE.md](docs/DATA_USE.md).
 
 If you use Head2Field in research, cite the manuscript with this BibTeX entry:
 
@@ -238,8 +239,8 @@ If you use Head2Field in research, cite the manuscript with this BibTeX entry:
 
 The title and author order match [CITATION.cff](CITATION.cff). Publication year,
 journal, and DOI are not yet recorded there. See the
-[citation guide](CITATION_GUIDE.md) for software citation and the relevant methods
+[citation guide](docs/CITATION_GUIDE.md) for software citation and the relevant methods
 and data sources.
 
 Model development benefited from WU-Minn Human Connectome Project data;
-[DATA_USE.md](DATA_USE.md) provides the acknowledgement and citation requirements.
+[DATA_USE.md](docs/DATA_USE.md) provides the acknowledgement and citation requirements.

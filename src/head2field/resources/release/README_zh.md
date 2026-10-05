@@ -9,7 +9,7 @@
 [![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat-square&logo=python&logoColor=white)](pyproject.toml)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)](pyproject.toml)
 [![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat-square)](docs/zh/preprocessing.md)
-[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat-square)](LICENSE_GUIDE_zh.md)
+[![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat-square)](docs/LICENSE_GUIDE_zh.md)
 
 [快速上手](#quick-start) · [文档](#documentation) · [论文复现](#reproduction) · [引用](#citation)
 
@@ -50,7 +50,7 @@ Head2Field 根据 T1 提取的头部解剖、组织电导率和电极坐标预�
 
 项目提供基于 PyTorch 的预处理、FEM 标签生成、物理引导训练和推理流程。v1 模型输出
 75 个 source→Oz 电场图，向量分量采用 world-RAS 坐标；每个电场图对应源电极 `+1 mA`、
-Oz `-1 mA`。本项目用于非临床科研；适用条件与限制见[模型说明](MODEL_CARD_zh.md)。
+Oz `-1 mA`。本项目用于非临床科研；适用条件与限制见[模型说明](docs/MODEL_CARD_zh.md)。
 
 | 工作流程 | 功能 | 依赖 |
 | --- | --- | --- |
@@ -191,25 +191,25 @@ source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 �
 - [模型结构](docs/zh/model_architecture.md)
 - [论文与代码对应及复现范围](docs/zh/paper_reproduction.md)
 - [机器可读数据合同](docs/zh/data_contracts.md)
-- [模型说明](MODEL_CARD_zh.md)、[数据使用](DATA_USE_zh.md)和[权重格式](weights/README_zh.md)
+- [模型说明](docs/MODEL_CARD_zh.md)、[数据使用](docs/DATA_USE_zh.md)和[权重格式](weights/README_zh.md)
 
 <a id="contributing"></a>
 
 ## 🤝 贡献
 
-开发环境与验证命令见[贡献指南](CONTRIBUTING_zh.md)。实现来源、软件变更和发布要求分别见
-[SOURCE_PROVENANCE_zh.md](SOURCE_PROVENANCE_zh.md)、[CHANGELOG_zh.md](CHANGELOG_zh.md) 和
-[发布清单](RELEASE_CHECKLIST_zh.md)。
+开发环境与验证命令见[贡献指南](docs/CONTRIBUTING_zh.md)。实现来源、软件变更和发布要求分别见
+[SOURCE_PROVENANCE_zh.md](docs/SOURCE_PROVENANCE_zh.md)、[CHANGELOG_zh.md](docs/CHANGELOG_zh.md) 和
+[发布清单](docs/RELEASE_CHECKLIST_zh.md)。
 
-源码注释、docstring 和 CLI 帮助使用英文。全部公开指南均提供英文与简体中文版本，
+公开 API 名称和 CLI 帮助使用英文，新增源码注释与 docstring 使用中文。全部公开指南均提供英文与简体中文版本，
 每页顶部可切换同一篇文档的语言。
 
 <a id="citation"></a>
 
 ## 🙏 许可证、引用与致谢
 
-源码采用 [GPL-3.0-only](LICENSE_GUIDE_zh.md) 许可证。第三方软件和模型权重遵循各自的分发说明，详见
-[THIRD_PARTY_NOTICES_zh.md](THIRD_PARTY_NOTICES_zh.md) 和 [DATA_USE_zh.md](DATA_USE_zh.md)。
+源码采用 [GPL-3.0-only](docs/LICENSE_GUIDE_zh.md) 许可证。第三方软件和模型权重遵循各自的分发说明，详见
+[THIRD_PARTY_NOTICES_zh.md](docs/THIRD_PARTY_NOTICES_zh.md) 和 [DATA_USE_zh.md](docs/DATA_USE_zh.md)。
 
 在科研中使用 Head2Field 时，可直接使用以下 BibTeX 引用论文：
 
@@ -226,8 +226,8 @@ source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 �
 ```
 
 题目与作者顺序对应 [CITATION.cff](CITATION.cff)。该文件尚未记录发表年份、期刊和 DOI。
-软件、相关方法与数据来源的引用要求见[引用指南](CITATION_GUIDE_zh.md)。
+软件、相关方法与数据来源的引用要求见[引用指南](docs/CITATION_GUIDE_zh.md)。
 
-模型开发受益于 WU-Minn Human Connectome Project 数据，[数据使用说明](DATA_USE_zh.md)
+模型开发受益于 WU-Minn Human Connectome Project 数据，[数据使用说明](docs/DATA_USE_zh.md)
 提供 HCP 致谢和方法引用要求的官方链接。源码与 Python 分发包不包含参与者影像、mesh、
 FEM 输出、cohort manifest 或训练恢复状态。

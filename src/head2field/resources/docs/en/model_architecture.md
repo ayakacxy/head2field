@@ -8,7 +8,7 @@ Head2Field v1 combines anatomical encoding, query features, and electrode
 geometry to predict the 75 source-to-Oz lead fields. Its fixed factory and strict
 weight schema keep the architecture consistent across training and inference.
 The model contract is described below; intended uses and limitations are in
-[MODEL_CARD.md](../../MODEL_CARD.md).
+[MODEL_CARD.md](../MODEL_CARD.md).
 The [code guide](code_guide.md) maps each stage to its implementation and lists
 the tensor dimensions used throughout the network.
 

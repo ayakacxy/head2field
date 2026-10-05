@@ -12,7 +12,7 @@ The default training configs, statistics producer/consumer and synthetic
 batches use 50/100 mm radial regions and per-step supervision scaling
 `M / (75 * N_train)`. Statistics and run contracts bind these settings to each
 training run. Inference uses the fixed v1 network and tensor-only weight schema.
-See [reproducibility and evaluation](docs/en/paper_reproduction.md) for the method
+See [reproducibility and evaluation](en/paper_reproduction.md) for the method
 map, experimental scope, and weight/performance provenance.
 
 The source and Python distributions contain project code, documentation, and

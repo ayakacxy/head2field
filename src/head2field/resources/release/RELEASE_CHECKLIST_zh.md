@@ -10,15 +10,15 @@
 
 ## 上传内容
 
-以当前项目目录作为仓库根目录，提交下列文件和目录，包括 `src/` 中的包资源副本：
+以包含 `pyproject.toml` 的目录作为仓库根目录，提交下列文件和目录，包括 `src/` 中的包资源副本：
 
 | 内容 | 仓库路径 |
 | --- | --- |
 | Python 包及包资源 | `src/` |
 | 默认配置与 schema | `configs/`、`schemas/` |
-| 指南与项目主图（PNG 和 PDF） | `docs/` |
+| 项目说明、技术指南与项目主图（PNG 和 PDF） | `docs/` |
 | 合成示例生成器与测试 | `examples/`、`tests/` |
-| 项目说明文档 | 根目录全部 `.md` 文件 |
+| 中英文项目概览 | `README.md`、`README_zh.md` |
 | 引用与许可证 | `CITATION.cff`、`LICENSE` |
 | 安装与源码打包 | `pyproject.toml`、`MANIFEST.in`、`.gitignore` |
 | 内置预训练模型与校验文件 | `src/head2field/resources/weights/` |
@@ -32,7 +32,7 @@ wheel 是可直接安装的发布资产，包含 Python 包、资源及预训练
 ## 版本与文档
 
 - [ ] 保持 `pyproject.toml`、`CITATION.cff`、包元数据和发布说明中的软件版本一致。
-- [ ] 检查 `CHANGELOG.md`，记录影响用户的兼容性变化。
+- [ ] 检查 `docs/CHANGELOG.md`，记录影响用户的兼容性变化。
 - [ ] 对齐中英文文档，包括 `docs/en/` 与 `docs/zh/` 内的同名文件；核验正文链接保持当前语言、语言切换进入同一篇文档。
 - [ ] 对照发布源码核验安装命令、CLI 示例和相对文档链接。
 - [ ] 同步包资源与顶层配置、schema 和文档。

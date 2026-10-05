@@ -7,7 +7,7 @@ title: "Head2Field"
 type: software
 version: "0.1.0rc1"
 authors:
-  - name: "Head2Field Contributors"
+  - name: "ayakacxy"
 abstract: >-
   Official implementation of Head2Field for continuous, subject-specific,
   multi-electrode tES lead-field prediction from structural MRI. Includes

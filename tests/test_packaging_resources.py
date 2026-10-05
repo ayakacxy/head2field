@@ -24,6 +24,10 @@ from head2field.resource_paths import (
 )
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
+ROOT_RELEASE_FILES = ("CITATION.cff", "LICENSE", "README.md", "README_zh.md")
+RELEASE_GUIDE_FILES = tuple(
+    name for name in RELEASE_FILES if name not in ROOT_RELEASE_FILES
+)
 
 
 def _citation_version() -> str:
@@ -43,7 +47,8 @@ def _citation_version() -> str:
         ("schemas", SCHEMA_FILES, PROJECT_ROOT / "schemas"),
         ("docs", DOCUMENT_FILES, PROJECT_ROOT / "docs"),
         ("examples", EXAMPLE_FILES, PROJECT_ROOT / "examples"),
-        ("release", RELEASE_FILES, PROJECT_ROOT),
+        ("release", ROOT_RELEASE_FILES, PROJECT_ROOT),
+        ("release", RELEASE_GUIDE_FILES, PROJECT_ROOT / "docs"),
         ("weights", ("README.md", "README_zh.md"), PROJECT_ROOT / "weights"),
     ),
 )
@@ -52,7 +57,7 @@ def test_packaged_resources_match_reviewable_source_files(
     names: tuple[str, ...],
     source_directory: Path,
 ) -> None:
-    """Packaged resources must match the reviewable top-level files byte for byte."""
+    """包资源必须与仓库中对应的权威文件逐字节一致。"""
 
     assert names
     for name in names:
@@ -112,7 +117,7 @@ def test_release_candidate_metadata_and_entry_points() -> None:
     assert metadata["build-system"]["requires"][0] == "setuptools>=77"
     assert project["version"] == "0.1.0rc1"
     assert project["license"] == "GPL-3.0-only"
-    assert project["license-files"] == ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+    assert project["license-files"] == ["LICENSE", "docs/THIRD_PARTY_NOTICES.md"]
     assert "Development Status :: 2 - Pre-Alpha" not in project["classifiers"]
     extras = project["optional-dependencies"]
     assert {"preprocess", "fem", "training", "full", "dev"} <= set(extras)
@@ -165,12 +170,9 @@ def test_sdist_manifest_includes_only_the_allowlisted_pretrained_weights() -> No
     manifest = (PROJECT_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
     required_lines = {
         "include CITATION.cff",
-        "include CHANGELOG.md",
-        "include RELEASE_CHECKLIST.md",
-        "include CONTRIBUTING.md",
-        "include MODEL_CARD.md",
-        "include DATA_USE.md",
-        "include SOURCE_PROVENANCE.md",
+        "include README.md",
+        "include README_zh.md",
+        "include .markdownlint.json",
         "graft configs",
         "graft schemas",
         "graft docs",
