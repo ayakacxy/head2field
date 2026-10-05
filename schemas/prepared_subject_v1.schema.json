@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:head2field:schema:prepared-subject:v1",
+  "title": "Prepared subject v1 manifest",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "shape",
+    "voxel_size_mm",
+    "orientation",
+    "affine_ijk_to_ras_mm",
+    "reference_electrode",
+    "electrode_count",
+    "source_count",
+    "query_count",
+    "conductivity_table",
+    "model_input_transform",
+    "head_model_provenance",
+    "files"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "prepared_subject_v1"
+    },
+    "shape": {
+      "const": [
+        256,
+        256,
+        256
+      ]
+    },
+    "voxel_size_mm": {
+      "const": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "orientation": {
+      "const": "RAS"
+    },
+    "affine_ijk_to_ras_mm": {
+      "const": [
+        [
+          1.0,
+          0.0,
+          0.0,
+          -128.0
+        ],
+        [
+          0.0,
+          1.0,
+          0.0,
+          -128.0
+        ],
+        [
+          0.0,
+          0.0,
+          1.0,
+          -128.0
+        ],
+        [
+          0.0,
+          0.0,
+          0.0,
+          1.0
+        ]
+      ]
+    },
+    "reference_electrode": {
+      "const": "Oz"
+    },
+    "electrode_count": {
+      "const": 76
+    },
+    "source_count": {
+      "const": 75
+    },
+    "query_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "conductivity_table": {
+      "type": "object",
+      "required": [
+        "id",
+        "unit",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "const": "simnibs-4.6-isotropic-v1"
+        },
+        "unit": {
+          "const": "S/m"
+        },
+        "values": {
+          "const": [
+            0.0,
+            0.126,
+            0.275,
+            1.654,
+            0.01,
+            0.465,
+            0.5,
+            0.008,
+            0.025,
+            0.6,
+            0.16
+          ]
+        },
+        "sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        }
+      },
+      "additionalProperties": false
+    },
+    "sigma_source_final_tissues_sha256": {
+      "description": "旧来源信息，可选，不参与运行校验。"
+    },
+    "model_input_transform": {
+      "type": "object",
+      "required": [
+        "id",
+        "divisor_s_per_m",
+        "output_dtype"
+      ],
+      "properties": {
+        "id": {
+          "const": "sigma_s_per_m_divide_1.654_float32_v1"
+        },
+        "divisor_s_per_m": {
+          "const": 1.654
+        },
+        "output_dtype": {
+          "const": "float32"
+        }
+      },
+      "additionalProperties": false
+    },
+    "head_model_provenance": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "simnibs_version"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "charm_runtime_binding_v1"
+        },
+        "runtime_manifest_sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        },
+        "simnibs_version": {
+          "const": "4.6.0"
+        },
+        "canonical_t1_sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        },
+        "charm_t1_sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        },
+        "final_tissues_sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        },
+        "head_mesh_sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        }
+      },
+      "additionalProperties": false
+    },
+    "files": {
+      "type": "object",
+      "required": [
+        "images/T1_1mm.nii.gz",
+        "images/final_tissues.nii.gz",
+        "images/sigma_1mm.nii.gz",
+        "voxels/gmwm_ijk.npy",
+        "electrodes/electrode_names_all.json",
+        "electrodes/electrode_names_no_oz.json",
+        "electrodes/electrode_coords_mm.npy"
+      ],
+      "properties": {
+        "images/T1_1mm.nii.gz": {
+          "$ref": "#/$defs/file"
+        },
+        "images/final_tissues.nii.gz": {
+          "$ref": "#/$defs/file"
+        },
+        "images/sigma_1mm.nii.gz": {
+          "$ref": "#/$defs/file"
+        },
+        "voxels/gmwm_ijk.npy": {
+          "$ref": "#/$defs/file"
+        },
+        "electrodes/electrode_names_all.json": {
+          "$ref": "#/$defs/file"
+        },
+        "electrodes/electrode_names_no_oz.json": {
+          "$ref": "#/$defs/file"
+        },
+        "electrodes/electrode_coords_mm.npy": {
+          "$ref": "#/$defs/file"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "file": {
+      "type": "object",
+      "required": [
+        "size"
+      ],
+      "properties": {
+        "sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

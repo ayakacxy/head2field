@@ -1,0 +1,825 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:head2field:schema:fem-labels:v1",
+  "title": "FEM labels v1 manifest",
+  "description": "Runtime-validated manifest for the complete 75 source-to-Oz label export.",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "schema_version",
+    "profile_id",
+    "query_count",
+    "reference_electrode",
+    "reference_mode",
+    "electrode_count",
+    "source_count",
+    "source_names",
+    "vector_frame",
+    "component_order",
+    "label_axis_order",
+    "output_dtype",
+    "output_unit",
+    "source_current_mA",
+    "reference_current_mA",
+    "conductivity_table",
+    "interpolation",
+    "leadfield_provenance",
+    "labels",
+    "publication"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "fem_labels_v1"
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "profile_id": {
+      "const": "fem-labels-v1-production"
+    },
+    "prepared_subject_manifest_sha256": {
+      "description": "旧来源信息，可选，不参与运行校验。"
+    },
+    "query_order_sha256": {
+      "description": "旧来源信息，可选，不参与运行校验。"
+    },
+    "query_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "reference_electrode": {
+      "const": "Oz"
+    },
+    "reference_mode": {
+      "const": "direct_e_to_reference"
+    },
+    "electrode_count": {
+      "const": 76
+    },
+    "source_count": {
+      "const": 75
+    },
+    "source_names": {
+      "const": [
+        "Fp1",
+        "Fpz",
+        "Fp2",
+        "AF7",
+        "AF3",
+        "AFz",
+        "AF4",
+        "AF8",
+        "F9",
+        "F7",
+        "F5",
+        "F3",
+        "F1",
+        "Fz",
+        "F2",
+        "F4",
+        "F6",
+        "F8",
+        "F10",
+        "FT9",
+        "FT7",
+        "FC5",
+        "FC3",
+        "FC1",
+        "FCz",
+        "FC2",
+        "FC4",
+        "FC6",
+        "FT8",
+        "FT10",
+        "T9",
+        "T7",
+        "C5",
+        "C3",
+        "C1",
+        "Cz",
+        "C2",
+        "C4",
+        "C6",
+        "T8",
+        "T10",
+        "TP9",
+        "TP7",
+        "CP5",
+        "CP3",
+        "CP1",
+        "CPz",
+        "CP2",
+        "CP4",
+        "CP6",
+        "TP8",
+        "TP10",
+        "P9",
+        "P7",
+        "P5",
+        "P3",
+        "P1",
+        "Pz",
+        "P2",
+        "P4",
+        "P6",
+        "P8",
+        "P10",
+        "PO9",
+        "PO7",
+        "PO3",
+        "POz",
+        "PO4",
+        "PO8",
+        "PO10",
+        "O1",
+        "O2",
+        "Iz",
+        "I1",
+        "I2"
+      ]
+    },
+    "source_order_sha256": {
+      "description": "旧来源信息，可选，不参与运行校验。"
+    },
+    "vector_frame": {
+      "const": "world-RAS"
+    },
+    "component_order": {
+      "const": [
+        "Ex",
+        "Ey",
+        "Ez"
+      ]
+    },
+    "label_axis_order": {
+      "const": [
+        "query",
+        "component"
+      ]
+    },
+    "output_dtype": {
+      "const": "float32"
+    },
+    "output_unit": {
+      "const": "V/m"
+    },
+    "source_current_mA": {
+      "const": 1
+    },
+    "reference_current_mA": {
+      "const": -1
+    },
+    "conductivity_table": {
+      "type": "object",
+      "required": [
+        "id",
+        "unit",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "const": "simnibs-4.6-isotropic-v1"
+        },
+        "unit": {
+          "const": "S/m"
+        },
+        "values": {
+          "const": [
+            0,
+            0.126,
+            0.275,
+            1.654,
+            0.01,
+            0.465,
+            0.5,
+            0.008,
+            0.025,
+            0.6,
+            0.16
+          ]
+        },
+        "sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        }
+      },
+      "additionalProperties": false
+    },
+    "interpolation": {
+      "type": "object",
+      "required": [
+        "backend",
+        "method",
+        "keep_tissues",
+        "compute_device"
+      ],
+      "properties": {
+        "backend": {
+          "const": "simnibs"
+        },
+        "method": {
+          "const": "linear"
+        },
+        "keep_tissues": {
+          "const": [
+            1,
+            2
+          ]
+        },
+        "compute_device": {
+          "const": "cpu"
+        }
+      },
+      "additionalProperties": false
+    },
+    "leadfield_provenance": {
+      "type": "object",
+      "required": [
+        "schema_version",
+        "profile_id",
+        "path_base",
+        "simnibs",
+        "solver_log",
+        "solver_runtime_mat",
+        "leadfield_hdf5",
+        "solver_conductivity",
+        "leadfield_contract"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": "fem-provenance-v1"
+        },
+        "profile_id": {
+          "const": "fem-labels-v1-production"
+        },
+        "path_base": {
+          "const": "leadfield_run_dir"
+        },
+        "simnibs": {
+          "type": "object",
+          "required": [
+            "adapter",
+            "runtime_version"
+          ],
+          "properties": {
+            "adapter": {
+              "const": "external-simnibs-cpu-reference"
+            },
+            "runtime_version": {
+              "const": "4.6.0"
+            }
+          },
+          "additionalProperties": false
+        },
+        "solver_log": {
+          "$ref": "#/$defs/file"
+        },
+        "solver_runtime_mat": {
+          "$ref": "#/$defs/file"
+        },
+        "leadfield_hdf5": {
+          "$ref": "#/$defs/file"
+        },
+        "solver_conductivity": {
+          "$ref": "#/$defs/solver_conductivity"
+        },
+        "leadfield_contract": {
+          "$ref": "#/$defs/leadfield_contract"
+        }
+      },
+      "additionalProperties": false
+    },
+    "labels": {
+      "type": "array",
+      "minItems": 75,
+      "maxItems": 75,
+      "items": {
+        "type": "object",
+        "required": [
+          "source_name",
+          "relative_path",
+          "size_bytes",
+          "shape",
+          "dtype"
+        ],
+        "properties": {
+          "source_name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "relative_path": {
+            "$ref": "#/$defs/relative_path"
+          },
+          "size_bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "sha256": {
+            "description": "旧来源信息，可选，不参与运行校验。"
+          },
+          "shape": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 1
+              },
+              {
+                "const": 3
+              }
+            ],
+            "items": false,
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "dtype": {
+            "const": "float32"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "publication": {
+      "type": "object",
+      "required": [
+        "policy",
+        "method",
+        "partial_output_published_on_failure"
+      ],
+      "properties": {
+        "policy": {
+          "const": "new_output_directory_only"
+        },
+        "method": {
+          "const": "sibling_staging_then_atomic_noreplace_rename"
+        },
+        "partial_output_published_on_failure": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "query_indices": {
+      "type": "object",
+      "required": [
+        "relative_path",
+        "size_bytes"
+      ],
+      "properties": {
+        "relative_path": {
+          "const": "query_ijk.npy"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "conductivity_table": {
+      "type": "object",
+      "required": [
+        "id",
+        "unit",
+        "values"
+      ],
+      "properties": {
+        "id": {
+          "const": "simnibs-4.6-isotropic-v1"
+        },
+        "unit": {
+          "const": "S/m"
+        },
+        "values": {
+          "const": [
+            0,
+            0.126,
+            0.275,
+            1.654,
+            0.01,
+            0.465,
+            0.5,
+            0.008,
+            0.025,
+            0.6,
+            0.16
+          ]
+        },
+        "sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        }
+      },
+      "additionalProperties": false
+    },
+    "solver_snapshot": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "runtime_source",
+        "anisotropy_type",
+        "cond_list_length",
+        "solver_tissue_tags",
+        "solver_tissue_names",
+        "solver_values_s_per_m",
+        "project_table"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "solver_conductivity_snapshot_v1"
+        },
+        "runtime_source": {
+          "enum": [
+            "simnibs.TDCSLEADFIELD.cond_before_run",
+            "simnibs_simulation_mat_readback"
+          ]
+        },
+        "anisotropy_type": {
+          "const": "scalar"
+        },
+        "cond_list_length": {
+          "const": 1000
+        },
+        "solver_tissue_tags": {
+          "const": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10
+          ]
+        },
+        "solver_tissue_names": {
+          "const": [
+            "WM",
+            "GM",
+            "CSF",
+            "Bone",
+            "Scalp",
+            "Eye_balls",
+            "Compact_bone",
+            "Spongy_bone",
+            "Blood",
+            "Muscle"
+          ]
+        },
+        "solver_values_s_per_m": {
+          "const": [
+            0.126,
+            0.275,
+            1.654,
+            0.01,
+            0.465,
+            0.5,
+            0.008,
+            0.025,
+            0.6,
+            0.16
+          ]
+        },
+        "project_table": {
+          "$ref": "#/$defs/conductivity_table"
+        }
+      },
+      "additionalProperties": false
+    },
+    "solver_conductivity": {
+      "type": "object",
+      "required": [
+        "schema_id",
+        "configured_runtime_object",
+        "matlab_readback",
+        "verification"
+      ],
+      "properties": {
+        "schema_id": {
+          "const": "solver_conductivity_verification_v1"
+        },
+        "configured_runtime_object": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/solver_snapshot"
+            },
+            {
+              "properties": {
+                "runtime_source": {
+                  "const": "simnibs.TDCSLEADFIELD.cond_before_run"
+                }
+              }
+            }
+          ]
+        },
+        "matlab_readback": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/solver_snapshot"
+            },
+            {
+              "properties": {
+                "runtime_source": {
+                  "const": "simnibs_simulation_mat_readback"
+                }
+              }
+            }
+          ]
+        },
+        "verification": {
+          "const": "exact_match"
+        }
+      },
+      "additionalProperties": false
+    },
+    "leadfield_contract": {
+      "type": "object",
+      "required": [
+        "profile_id",
+        "dataset_shape",
+        "electrode_names_all",
+        "electrode_names_no_reference",
+        "reference",
+        "reference_index",
+        "current",
+        "field",
+        "data_type",
+        "units",
+        "tissues",
+        "electrode_coordinate_shape",
+        "electrode_coordinates_mm",
+        "coordinates_finite",
+        "dataset_path",
+        "mesh_element_count"
+      ],
+      "properties": {
+        "profile_id": {
+          "const": "fem-labels-v1-production"
+        },
+        "dataset_shape": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": 75
+            },
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "const": 3
+            }
+          ],
+          "items": false,
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "electrode_names_all": {
+          "const": [
+            "Oz",
+            "Fp1",
+            "Fpz",
+            "Fp2",
+            "AF7",
+            "AF3",
+            "AFz",
+            "AF4",
+            "AF8",
+            "F9",
+            "F7",
+            "F5",
+            "F3",
+            "F1",
+            "Fz",
+            "F2",
+            "F4",
+            "F6",
+            "F8",
+            "F10",
+            "FT9",
+            "FT7",
+            "FC5",
+            "FC3",
+            "FC1",
+            "FCz",
+            "FC2",
+            "FC4",
+            "FC6",
+            "FT8",
+            "FT10",
+            "T9",
+            "T7",
+            "C5",
+            "C3",
+            "C1",
+            "Cz",
+            "C2",
+            "C4",
+            "C6",
+            "T8",
+            "T10",
+            "TP9",
+            "TP7",
+            "CP5",
+            "CP3",
+            "CP1",
+            "CPz",
+            "CP2",
+            "CP4",
+            "CP6",
+            "TP8",
+            "TP10",
+            "P9",
+            "P7",
+            "P5",
+            "P3",
+            "P1",
+            "Pz",
+            "P2",
+            "P4",
+            "P6",
+            "P8",
+            "P10",
+            "PO9",
+            "PO7",
+            "PO3",
+            "POz",
+            "PO4",
+            "PO8",
+            "PO10",
+            "O1",
+            "O2",
+            "Iz",
+            "I1",
+            "I2"
+          ]
+        },
+        "electrode_names_no_reference": {
+          "const": [
+            "Fp1",
+            "Fpz",
+            "Fp2",
+            "AF7",
+            "AF3",
+            "AFz",
+            "AF4",
+            "AF8",
+            "F9",
+            "F7",
+            "F5",
+            "F3",
+            "F1",
+            "Fz",
+            "F2",
+            "F4",
+            "F6",
+            "F8",
+            "F10",
+            "FT9",
+            "FT7",
+            "FC5",
+            "FC3",
+            "FC1",
+            "FCz",
+            "FC2",
+            "FC4",
+            "FC6",
+            "FT8",
+            "FT10",
+            "T9",
+            "T7",
+            "C5",
+            "C3",
+            "C1",
+            "Cz",
+            "C2",
+            "C4",
+            "C6",
+            "T8",
+            "T10",
+            "TP9",
+            "TP7",
+            "CP5",
+            "CP3",
+            "CP1",
+            "CPz",
+            "CP2",
+            "CP4",
+            "CP6",
+            "TP8",
+            "TP10",
+            "P9",
+            "P7",
+            "P5",
+            "P3",
+            "P1",
+            "Pz",
+            "P2",
+            "P4",
+            "P6",
+            "P8",
+            "P10",
+            "PO9",
+            "PO7",
+            "PO3",
+            "POz",
+            "PO4",
+            "PO8",
+            "PO10",
+            "O1",
+            "O2",
+            "Iz",
+            "I1",
+            "I2"
+          ]
+        },
+        "reference": {
+          "const": "Oz"
+        },
+        "reference_index": {
+          "const": 0
+        },
+        "current": {
+          "const": "1A"
+        },
+        "field": {
+          "const": "E"
+        },
+        "data_type": {
+          "const": "element_data"
+        },
+        "units": {
+          "const": "V/m"
+        },
+        "tissues": {
+          "const": [
+            1,
+            2
+          ]
+        },
+        "electrode_coordinate_shape": {
+          "const": [
+            76,
+            3
+          ]
+        },
+        "electrode_coordinates_mm": {
+          "type": "array",
+          "minItems": 76,
+          "maxItems": 76,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "coordinates_finite": {
+          "const": true
+        },
+        "dataset_path": {
+          "const": "mesh_leadfield/leadfields/tdcs_leadfield"
+        },
+        "mesh_element_count": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "file": {
+      "type": "object",
+      "required": [
+        "path",
+        "size_bytes"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/relative_path"
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "sha256": {
+          "description": "旧来源信息，可选，不参与运行校验。"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:head2field:schema:training-dataset:v1",
+  "title": "Head2Field training dataset v1 manifest",
+  "description": "Group-disjoint, hash-bound references to prepared inputs, FEM labels, loss statistics, and train-fit physics pools.",
+  "type": "object",
+  "required": [
+    "schema_id",
+    "split_policy",
+    "reference_electrode",
+    "source_names",
+    "conductivity_table_id",
+    "sigma_model_transform_id",
+    "sigma_model_divisor_s_per_m",
+    "groups",
+    "subjects"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "training_dataset_v1"
+    },
+    "split_policy": {
+      "const": "group_disjoint_v1"
+    },
+    "reference_electrode": {
+      "const": "Oz"
+    },
+    "source_names": {
+      "type": "array",
+      "minItems": 75,
+      "maxItems": 75,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "source_order_sha256": {
+      "description": "旧来源信息，可选，不参与运行校验。"
+    },
+    "conductivity_table_id": {
+      "const": "simnibs-4.6-isotropic-v1"
+    },
+    "conductivity_table_sha256": {
+      "description": "旧来源信息，可选，不参与运行校验。"
+    },
+    "sigma_model_transform_id": {
+      "const": "sigma_s_per_m_divide_1.654_float32_v1"
+    },
+    "sigma_model_divisor_s_per_m": {
+      "const": 1.654
+    },
+    "groups": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "group_key",
+          "partition"
+        ],
+        "properties": {
+          "group_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "partition": {
+            "enum": [
+              "train",
+              "validation",
+              "test"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "subjects": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "subject_key",
+          "group_key",
+          "prepared_subject_manifest",
+          "fem_labels_manifest",
+          "loss_statistics_manifest",
+          "physics_pool_manifest"
+        ],
+        "properties": {
+          "subject_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "group_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prepared_subject_manifest": {
+            "$ref": "#/$defs/relative_path"
+          },
+          "prepared_subject_manifest_sha256": {
+            "description": "旧来源信息，可选，不参与运行校验。"
+          },
+          "fem_labels_manifest": {
+            "$ref": "#/$defs/relative_path"
+          },
+          "fem_labels_manifest_sha256": {
+            "description": "旧来源信息，可选，不参与运行校验。"
+          },
+          "loss_statistics_manifest": {
+            "$ref": "#/$defs/relative_path"
+          },
+          "loss_statistics_manifest_sha256": {
+            "description": "旧来源信息，可选，不参与运行校验。"
+          },
+          "physics_pool_manifest": {
+            "$ref": "#/$defs/relative_path"
+          },
+          "physics_pool_manifest_sha256": {
+            "description": "旧来源信息，可选，不参与运行校验。"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "relative_path": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?![A-Za-z]:[\\\\/])(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,170 @@
+{
+  "schema_id": "fem_labels_config_v1",
+  "candidate_status": "implementation_included",
+  "profile_id": "fem-labels-v1-production",
+  "python_api": "head2field.fem_labels.generate_fem_labels",
+  "leadfield_stage_api": "head2field.fem_labels.run_tdcs_leadfield",
+  "export_stage_api": "head2field.fem_labels.export_fem_labels_from_hdf5",
+  "dry_run_api": "head2field.fem_labels.dry_run_fem_generation",
+  "validation_api": "head2field.fem_labels.validate_fem_artifacts",
+  "module_entry_point": "python -m head2field.fem_labels",
+  "external_runtime": {
+    "name": "SimNIBS",
+    "required_version": "4.6.0",
+    "redistributed": false,
+    "fallback_allowed": false
+  },
+  "generation_input": {
+    "prepared_subject": "validated prepared_subject_v1 directory",
+    "head_mesh": "the unique root-level external CHARM mesh bound by prepared head_model_provenance and charm_runtime_v1.json",
+    "required_runtime_identity": [
+      "simnibs_version",
+      "unique_head_mesh",
+      "prepared_T1_and_tissues",
+      "source_names",
+      "query_ijk"
+    ],
+    "revalidation": "before solver run and again before atomic publication"
+  },
+  "leadfield_solver": {
+    "api": "simnibs.sim_struct.TDCSLEADFIELD.run",
+    "backend": "pardiso",
+    "device": "cpu",
+    "allow_multiple_runs": false,
+    "interpolation_during_solve": null,
+    "save_mat": true
+  },
+  "solver_conductivity": {
+    "object_type": "simnibs.sim_struct.COND",
+    "anisotropy_type": "scalar",
+    "official_cond_list_length": 1000,
+    "solver_tags": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10
+    ],
+    "solver_index_rule": "cond[tag - 1]",
+    "solver_tissue_names": [
+      "WM",
+      "GM",
+      "CSF",
+      "Bone",
+      "Scalp",
+      "Eye_balls",
+      "Compact_bone",
+      "Spongy_bone",
+      "Blood",
+      "Muscle"
+    ],
+    "solver_values_s_per_m": [
+      0.126,
+      0.275,
+      1.654,
+      0.01,
+      0.465,
+      0.5,
+      0.008,
+      0.025,
+      0.6,
+      0.16
+    ],
+    "project_background_tag_0": {
+      "value_s_per_m": 0.0,
+      "included_in_project_table": true,
+      "assigned_to_solver_cond": false
+    },
+    "preserve_untouched_solver_tags": [
+      100,
+      500
+    ]
+  },
+  "solver_runtime_evidence": {
+    "filename_pattern": "simnibs_simulation_*.mat",
+    "required_file_count": 1,
+    "readback_api": "simnibs.utils.matlab_read.read_mat",
+    "verification": "exact match between configured runtime object and MAT readback",
+    "manifest_fields": [
+      "solver_runtime_mat",
+      "solver_conductivity.configured_runtime_object",
+      "solver_conductivity.matlab_readback",
+      "solver_conductivity.verification"
+    ]
+  },
+  "reference_electrode": "Oz",
+  "electrode_count": 76,
+  "source_count": 75,
+  "electrode_geometry": {
+    "shape": "ellipse",
+    "dimensions_mm": [
+      10.0,
+      10.0
+    ],
+    "thickness_mm": [
+      4.0
+    ],
+    "description": "Circular cylinder, 10 mm diameter and 4 mm thickness; SimNIBS 4.6.0 TDCSLEADFIELD default"
+  },
+  "reference_mode": "direct_e_to_reference",
+  "source_current_mA": 1.0,
+  "reference_current_mA": -1.0,
+  "vector_frame": "world-RAS",
+  "component_order": [
+    "Ex",
+    "Ey",
+    "Ez"
+  ],
+  "label_axis_order": [
+    "query",
+    "component"
+  ],
+  "training_target_axis_order": [
+    "query",
+    "source",
+    "component"
+  ],
+  "output_dtype": "float32",
+  "output_unit": "V/m",
+  "interpolation": {
+    "backend": "simnibs",
+    "method": "linear",
+    "keep_tissues": [
+      1,
+      2
+    ],
+    "compute_device": "cpu"
+  },
+  "export_input": {
+    "required": [
+      "prepared_subject_dir",
+      "leadfield_hdf5",
+      "solver_log",
+      "leadfield_run_manifest"
+    ],
+    "run_manifest": "leadfield_run_v1.json with verified MAT and actual conductivity provenance"
+  },
+  "fem_label_provenance": {
+    "path_base": "leadfield_run_dir",
+    "required_runtime_files": [
+      "solver_log",
+      "solver_runtime_mat",
+      "leadfield_hdf5"
+    ],
+    "required_solver_evidence": [
+      "solver_conductivity.configured_runtime_object",
+      "solver_conductivity.matlab_readback",
+      "solver_conductivity.verification"
+    ],
+    "conductivity_source": "actual SimNIBS runtime MAT readback",
+    "static_profile_substitution_allowed": false
+  },
+  "leadfield_run_manifest": "leadfield_run_v1.json",
+  "output_manifest": "fem_labels_v1.json",
+  "output_policy": "new_directory_only"
+}

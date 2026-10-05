@@ -1,0 +1,108 @@
+{
+  "schema_id": "preprocessing_config_v1",
+  "candidate_status": "implementation_included",
+  "python_api": "head2field.preprocessing.prepare_subject",
+  "canonicalize_stage_api": "head2field.preprocessing.preprocess_t1",
+  "assembly_stage_api": "head2field.preprocessing.assemble_prepared_subject",
+  "module_entry_point": "python -m head2field.preprocessing",
+  "profiles": {
+    "hcp_acpc": {
+      "input_contract": "ACPC-aligned and distortion-corrected T1",
+      "rigid_estimation_call_count": 0,
+      "operation": "foreground centering and canonical resampling"
+    },
+    "non_hcp_raw": {
+      "input_contract": "raw T1 plus caller-provided orientation template",
+      "rigid_estimation_call_count": 1,
+      "degrees_of_freedom": 6,
+      "scaling_allowed": false
+    }
+  },
+  "canonical_grid": {
+    "shape": [
+      256,
+      256,
+      256
+    ],
+    "voxel_size_mm": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "orientation": "RAS",
+    "affine_ijk_to_ras_mm": [
+      [
+        1.0,
+        0.0,
+        0.0,
+        -128.0
+      ],
+      [
+        0.0,
+        1.0,
+        0.0,
+        -128.0
+      ],
+      [
+        0.0,
+        0.0,
+        1.0,
+        -128.0
+      ],
+      [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ]
+    ]
+  },
+  "canonicalization_manifest": "preprocessing_v1.json",
+  "prepared_subject_manifest": "prepared_subject_v1.json",
+  "output_policy": "three_distinct_new_directories_only",
+  "segmentation": {
+    "adapter": "external-simnibs-charm",
+    "required_version": "4.6.0",
+    "redistributed_runtime_or_atlas": false,
+    "fallback_allowed": false,
+    "runtime_manifest": {
+      "schema_id": "charm_runtime_v1",
+      "filename": "charm_runtime_v1.json",
+      "canonical_t1_record": "external path omitted; file size recorded; image and affine compared directly",
+      "required_internal_records": [
+        "T1.nii.gz",
+        "final_tissues.nii.gz",
+        "exactly one root-level *.msh"
+      ],
+      "internal_record_fields": [
+        "relative_path",
+        "size_bytes"
+      ],
+      "simnibs_version": "4.6.0",
+      "additional_properties_allowed": false
+    }
+  },
+  "electrode_input": {
+    "production_default": "extract and reorder eeg_positions/EEG10-10_UI_Jurak_2007.csv from the current CHARM head model",
+    "required_order": "standard 76 names with Oz first",
+    "coordinates": "finite world-RAS mm [76, 3]",
+    "explicit_override": "optional paired names JSON and coordinates NPY"
+  },
+  "query_order": "np.argwhere(tissue in {1,2}) C-order",
+  "prepared_subject_binding": {
+    "copied_artifacts": [
+      "canonical T1",
+      "final_tissues.nii.gz"
+    ],
+    "external_artifacts_not_copied": [
+      "head mesh"
+    ],
+    "head_model_provenance_schema_id": "charm_runtime_binding_v1",
+    "required_fields": [
+      "schema_id",
+      "simnibs_version"
+    ],
+    "fem_mesh_policy": "unique root mesh from the current CHARM head model; prepared T1 and tissues must match its images and affine"
+  },
+  "prepared_subject_validator": "head2field.preprocessing.load_prepared_subject_v1"
+}

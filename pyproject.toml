@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=77", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "head2field"
+version = "0.1.0rc1"
+description = "Head2Field: continuous neural fields for subject-specific tES lead-field prediction"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "GPL-3.0-only"
+license-files = ["LICENSE", "THIRD_PARTY_NOTICES.md"]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Science/Research",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.11",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+dependencies = [
+  "nibabel>=5.2",
+  "numpy>=1.26",
+  "torch>=2.2",
+]
+
+[project.optional-dependencies]
+preprocess = [
+  "scipy>=1.11",
+]
+fem = [
+  "h5py>=3.10",
+]
+training = []
+full = [
+  "h5py>=3.10",
+  "scipy>=1.11",
+]
+dev = [
+  "build>=1.2",
+  "h5py>=3.10",
+  "jsonschema>=4.21",
+  "pytest>=8",
+  "ruff>=0.6",
+  "scipy>=1.11",
+]
+
+[project.scripts]
+head2field-predict = "head2field.cli:main"
+head2field-prepare = "head2field.preprocessing.cli:prepare_main"
+head2field-fem = "head2field.fem_labels.cli:main"
+head2field-train = "head2field.training.cli:train_main"
+head2field-train-preflight = "head2field.training.cli:preflight_main"
+head2field-prepare-cache = "head2field.training.cli:prepare_cache_main"
+head2field-prepare-statistics = "head2field.training.cli:prepare_statistics_main"
+head2field-prepare-physics = "head2field.training.cli:prepare_physics_main"
+head2field-make-synthetic-training = "head2field.training.cli:prepare_synthetic_main"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+head2field = [
+  "resources/configs/*.json",
+  "resources/schemas/*.json",
+  "resources/docs/en/*.md",
+  "resources/docs/zh/*.md",
+  "resources/examples/*.md",
+  "resources/release/*",
+  "resources/weights/*.md",
+  "resources/weights/head2field_v1_weights.pth",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["B", "E4", "E7", "E9", "F", "I", "RUF", "SIM", "UP"]
+ignore = ["RUF001", "RUF002", "RUF003"]
