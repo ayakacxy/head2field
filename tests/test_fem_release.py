@@ -1,4 +1,4 @@
-"""Pure synthetic tests for release-candidate FEM solving, export, manifests, and transactions."""
+"""使用纯合成数据验证发布版 FEM 求解、导出、清单与事务。"""
 
 from __future__ import annotations
 

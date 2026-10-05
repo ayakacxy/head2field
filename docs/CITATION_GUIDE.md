@@ -20,7 +20,7 @@ and authors; it has no publication year or DOI entry.
 ## Software and supporting methods
 
 The software citation in [CITATION.cff](../CITATION.cff) identifies **Head2Field**,
-version **0.1.0rc1**, with **ayakacxy** as the software author.
+version **0.1.0**, with **ayakacxy** as the software author.
 Record the package version used in your work; the software version and the
 Head2Field v1 model contract are tracked independently.
 

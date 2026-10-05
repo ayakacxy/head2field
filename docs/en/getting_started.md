@@ -14,14 +14,14 @@ Installed documentation is also readable with
 Use Python 3.11 or newer. From the directory containing the downloaded wheel:
 
 ```bash
-python -m pip install ./head2field-0.1.0rc1-py3-none-any.whl
+python -m pip install ./head2field-0.1.0-py3-none-any.whl
 head2field-predict --help
 ```
 
 For preprocessing and FEM workflows, install the wheel with its optional extra:
 
 ```bash
-python -m pip install './head2field-0.1.0rc1-py3-none-any.whl[full]'
+python -m pip install './head2field-0.1.0-py3-none-any.whl[full]'
 ```
 
 `full` adds SciPy and h5py. SimNIBS/CHARM 4.6.0 is installed separately and must

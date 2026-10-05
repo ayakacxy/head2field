@@ -6,6 +6,7 @@
 
 从结构 MRI 预测个体特异性多电极 TES 先导场的连续神经场。
 
+[![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-orange?style=flat)](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0)
 [![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat&logo=python&logoColor=white)](pyproject.toml)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)](pyproject.toml)
 [![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat)](docs/zh/preprocessing.md)
@@ -63,10 +64,10 @@ Oz `-1 mA`。本项目用于非临床科研；适用条件与限制见[模型说
 
 ## 🐍 安装
 
-要求 Python 3.11 或更新版本。下载的 wheel 已包含预训练 Head2Field v1 权重，安装后即可用于推理：
+要求 Python 3.11 或更新版本。从 [Release v0.1.0](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0) 下载 wheel；其中已包含预训练 Head2Field v1 权重，安装后即可用于推理：
 
 ```bash
-python -m pip install head2field-0.1.0rc1-py3-none-any.whl
+python -m pip install head2field-0.1.0-py3-none-any.whl
 head2field-predict --help
 ```
 
@@ -79,7 +80,7 @@ python -m pip install .
 通过 wheel 安装预处理和 FEM 所需的可选依赖：
 
 ```bash
-python -m pip install './head2field-0.1.0rc1-py3-none-any.whl[full]'
+python -m pip install './head2field-0.1.0-py3-none-any.whl[full]'
 ```
 
 从源码安装时，根据需要选择可选流程：

@@ -15,14 +15,14 @@
 使用 Python 3.11 或更新版本，在下载的 wheel 所在目录执行：
 
 ```bash
-python -m pip install ./head2field-0.1.0rc1-py3-none-any.whl
+python -m pip install ./head2field-0.1.0-py3-none-any.whl
 head2field-predict --help
 ```
 
 预处理和 FEM 流程需要安装 wheel 的可选 extra：
 
 ```bash
-python -m pip install './head2field-0.1.0rc1-py3-none-any.whl[full]'
+python -m pip install './head2field-0.1.0-py3-none-any.whl[full]'
 ```
 
 `full` 增加 SciPy 和 h5py。SimNIBS/CHARM 4.6.0 单独安装，并应在执行预处理或 FEM 命令的 Python 环境中可用。源码目录中可执行 `python -m pip install '.[full]'`。外部头模型和求解器要求见[预处理](preprocessing.md)与[FEM 标签生成](fem_label_generation.md)。

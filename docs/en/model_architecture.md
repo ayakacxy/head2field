@@ -96,6 +96,6 @@ Model releases use explicit versioned names: `Head2FieldV1`,
 model. Future model versions follow the same naming pattern with their own
 architecture configuration and weight loader.
 
-The package version (`0.1.0rc1`) and data-schema versions are independent of the
+The package version (`0.1.0`) and data-schema versions are independent of the
 model version. For example, a `v2` training-statistics schema still describes
 data used to train Head2Field v1.

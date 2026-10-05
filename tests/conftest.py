@@ -1,4 +1,4 @@
-"""Synthetic fixtures for the release-candidate inference vertical slice."""
+"""提供发布版推理测试所需的合成输入。"""
 
 from __future__ import annotations
 
@@ -38,14 +38,14 @@ SMALL_MODEL_CONFIG: dict[str, object] = {
 
 
 def make_small_model() -> Head2FieldV1:
-    """Create a small same-architecture model suitable for CPU regression tests."""
+    """创建适合 CPU 回归测试的同结构小模型。"""
 
     torch.manual_seed(20260901)
     return Head2FieldV1(**SMALL_MODEL_CONFIG).eval()
 
 
 def make_synthetic_subject() -> PreparedModelInputSubject:
-    """Create an eight-cubed input without real subject information."""
+    """创建不含真实被试信息的 8×8×8 合成输入。"""
 
     shape = (8, 8, 8)
     tissues = np.ones(shape, dtype=np.uint8)

@@ -75,4 +75,4 @@ E(a -> c) = E(a -> b) + E(b -> c)
 
 模型版本采用显式命名：当前模型由 `Head2FieldV1`、`create_head2field_v1()`、`load_head2field_v1_weights()`、`configs/head2field_v1.json` 和 `head2field_v1_weights.pth` 描述。未来版本沿用同样命名规则，拥有各自的结构配置和权重加载器。
 
-软件包版本（`0.1.0rc1`）和数据 schema 版本独立于模型版本。例如，`v2` 训练统计 schema 仍可描述用于训练 Head2Field v1 的数据。
+软件包版本（`0.1.0`）和数据 schema 版本独立于模型版本。例如，`v2` 训练统计 schema 仍可描述用于训练 Head2Field v1 的数据。

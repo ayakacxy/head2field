@@ -6,6 +6,7 @@
 
 **Continuous neural fields for subject-specific tES lead-field prediction.**
 
+[![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-orange?style=flat)](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0)
 [![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat&logo=python&logoColor=white)](pyproject.toml)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)](pyproject.toml)
 [![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat)](docs/en/preprocessing.md)
@@ -67,11 +68,12 @@ assumptions, and limitations.
 
 ## 🚀 Installation
 
-Use Python 3.11 or newer. Install the downloaded wheel, which includes the
-pretrained Head2Field v1 weights:
+Use Python 3.11 or newer. Download the wheel from
+[Release v0.1.0](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0),
+which includes the pretrained Head2Field v1 weights, and install it:
 
 ```bash
-python -m pip install head2field-0.1.0rc1-py3-none-any.whl
+python -m pip install head2field-0.1.0-py3-none-any.whl
 head2field-predict --help
 ```
 
@@ -84,7 +86,7 @@ python -m pip install .
 For optional preprocessing and FEM dependencies, install the local wheel with:
 
 ```bash
-python -m pip install './head2field-0.1.0rc1-py3-none-any.whl[full]'
+python -m pip install './head2field-0.1.0-py3-none-any.whl[full]'
 ```
 
 From a source checkout, select the workflows as needed:

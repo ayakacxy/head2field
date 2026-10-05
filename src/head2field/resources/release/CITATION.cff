@@ -5,7 +5,7 @@ message: >-
   Lead-Field Prediction from Structural MRI", this software, and the relevant methods and data sources.
 title: "Head2Field"
 type: software
-version: "0.1.0rc1"
+version: "0.1.0"
 authors:
   - name: "ayakacxy"
 abstract: >-

@@ -1,4 +1,4 @@
-"""Validate release metadata and wheel resource contracts."""
+"""验证发布元数据与 wheel 包资源合同。"""
 
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ RELEASE_GUIDE_FILES = tuple(
 
 
 def _citation_version() -> str:
-    """Read the software version from the reviewed CFF top-level version field."""
+    """读取已审查的 CFF 顶层软件版本字段。"""
 
     text = (PROJECT_ROOT / "CITATION.cff").read_text(encoding="utf-8")
     match = re.search(r'^version:\s*["\']?([^"\'\s]+)["\']?\s*$', text, re.M)
@@ -70,7 +70,7 @@ def test_packaged_resources_match_reviewable_source_files(
 
 @pytest.mark.parametrize("kind", ("configs", "schemas"))
 def test_packaged_json_resources_parse(kind: str) -> None:
-    """Every shipped JSON resource must be parseable."""
+    """所有随包发布的 JSON 资源都必须可解析。"""
 
     names = CONFIG_FILES if kind == "configs" else SCHEMA_FILES
     for name in names:
@@ -84,14 +84,14 @@ def test_packaged_json_resources_parse(kind: str) -> None:
     ("../head2field_v1.json", "/head2field_v1.json", "nested/head2field_v1.json", "."),
 )
 def test_packaged_resource_rejects_non_leaf_names(name: str) -> None:
-    """Resource accessors must reject directory traversal and non-leaf paths."""
+    """资源访问器必须拒绝目录穿越与非叶子路径。"""
 
     with pytest.raises(ValueError):
         packaged_resource("configs", name)
 
 
 def test_packaged_resource_rejects_undeclared_file() -> None:
-    """Resource accessors must not expose files outside the allowlist."""
+    """资源访问器不得暴露允许列表之外的文件。"""
 
     with pytest.raises(ValueError, match="Undeclared"):
         packaged_resource("docs", "private_notes.md")
@@ -102,20 +102,20 @@ def test_packaged_resource_rejects_undeclared_file() -> None:
     ("en/../zh/README.md", "/en/README.md", "en//README.md", "en/./README.md"),
 )
 def test_packaged_document_rejects_unsafe_or_noncanonical_paths(name: str) -> None:
-    """Language directories must not permit traversal or alternate path spellings."""
+    """语言目录不得接受目录穿越或同一路径的替代写法。"""
 
     with pytest.raises(ValueError, match="normalized relative path"):
         packaged_resource("docs", name)
 
 
-def test_release_candidate_metadata_and_entry_points() -> None:
-    """Metadata must record the candidate version, PEP 639 license, and stable CLIs."""
+def test_release_metadata_and_entry_points() -> None:
+    """发布元数据必须记录正式版本、PEP 639 许可证与稳定命令入口。"""
 
     metadata = tomllib.loads((PROJECT_ROOT / "pyproject.toml").read_text("utf-8"))
     project = metadata["project"]
     assert project["name"] == "head2field"
     assert metadata["build-system"]["requires"][0] == "setuptools>=77"
-    assert project["version"] == "0.1.0rc1"
+    assert project["version"] == "0.1.0"
     assert project["license"] == "GPL-3.0-only"
     assert project["license-files"] == ["LICENSE", "docs/THIRD_PARTY_NOTICES.md"]
     assert "Development Status :: 2 - Pre-Alpha" not in project["classifiers"]
@@ -143,13 +143,13 @@ def test_release_candidate_metadata_and_entry_points() -> None:
 
 
 def test_release_version_is_consistent_with_citation_and_install() -> None:
-    """Source metadata, CFF, and installed distributions must share the same RC version."""
+    """源码元数据、CFF 与已安装分发包必须使用相同的正式版本。"""
 
     project = tomllib.loads(
         (PROJECT_ROOT / "pyproject.toml").read_text(encoding="utf-8")
     )["project"]
     expected = project["version"]
-    assert expected == "0.1.0rc1"
+    assert expected == "0.1.0"
     assert _citation_version() == expected
 
     require_installed = os.environ.get("HEAD2FIELD_RELEASE_REQUIRE_INSTALLED") == "1"
@@ -158,14 +158,14 @@ def test_release_version_is_consistent_with_citation_and_install() -> None:
     except importlib_metadata.PackageNotFoundError:
         if require_installed:
             raise AssertionError(
-                "要求安装验证，但环境中没有候选 distribution"
+                "要求安装验证，但环境中没有已安装的 head2field 分发包"
             ) from None
     else:
         assert installed == expected
 
 
 def test_sdist_manifest_includes_only_the_allowlisted_pretrained_weights() -> None:
-    """The sdist includes default weights while excluding other checkpoints and local outputs."""
+    """源码分发包包含默认权重，并排除其他 checkpoint 与本地产物。"""
 
     manifest = (PROJECT_ROOT / "MANIFEST.in").read_text(encoding="utf-8")
     required_lines = {

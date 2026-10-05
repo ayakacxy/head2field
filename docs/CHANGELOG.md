@@ -6,7 +6,14 @@ Notable changes to the software are recorded here. The model-contract version
 `v1` and software version are independent: a package update does not by itself
 create a new trained model.
 
-## 0.1.0rc1
+## 0.1.0
+
+### Release assets
+
+- Publish the `v0.1.0` Git tag and software release with a wheel, source archive,
+  and `SHA256SUMS`.
+- Update installation examples and citation metadata to `0.1.0`, add a rounded
+  release badge, and complete the bilingual release verification checklist.
 
 ### Documentation and code readability
 
@@ -25,7 +32,11 @@ create a new trained model.
 
 ### Bundled pretrained model
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+- The wheel and source archive contain the verified Head2Field v1 weights and
+  their checksum file.
+- Inference uses the bundled pretrained model by default; `--weights` selects
+  compatible custom weights.
+- `load_head2field_v1_weights()` loads the bundled model when no path is supplied.
 
 ### Head2Field naming
 
@@ -48,6 +59,11 @@ Runtime checks compare parameters, groups, relative paths, file sizes, coordinat
   updated the manuscript title and citation metadata.
 
 ### Workflows
+
+Runtime checks compare parameters, groups, relative paths, file sizes, coordinate
+order, shapes, dtypes, and finite values directly. Resume compares the full
+configuration and dataset manifest. Regenerate statistics for the current
+50/100 mm regions and training split.
 
 ### Training
 
