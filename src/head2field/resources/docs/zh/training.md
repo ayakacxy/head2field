@@ -4,7 +4,7 @@
 
 [English](../en/training.md) · [简体中文](training.md)
 
-运行时直接核对参数、分组、相对路径、文件大小、坐标顺序、shape、dtype 和有限值。训练恢复比较完整配置与数据清单；统计必须按当前 50/100 mm 设置和训练划分生成。
+训练流程提供数据与物理损失、明确的数据集合同、数据准备命令、CUDA FP16 epoch 训练、确定性验证和完整本地恢复状态。影像、prepared subject、FEM 标签、缓存、统计量和物理池由用户准备，日志及恢复状态保存在本地。
 
 <a id="execution-profiles"></a>
 
@@ -21,7 +21,7 @@
 
 ## 训练设置
 
-全部真实数据训练规模采用相同设置：
+默认真实数据训练配置采用以下设置：
 
 | 设置 | 数值 |
 | --- | --- |
@@ -59,7 +59,7 @@ v1 GP 目标采用：
 
 公式位于 [losses.py](../../src/head2field/training/losses.py) 和 [physics.py](../../src/head2field/training/physics.py)。模型预测与 FEM 电场使用同一组离散物理算子；预测值不能改变有效掩膜或拟合阈值。
 
-每步数据损失缩放为 `M / (75 * N_train)`，在源批次与查询分块之间保持固定，包含末尾不完整批次。验证和测试复用训练确定的缩放。能量分母中位数在每个被试内部的有效源电场之间计算。方法对应及实验范围见[复现说明](paper_reproduction.md)。
+每步数据损失缩放为 `M / (75 * N_train)`，在源批次与查询分块之间保持固定，包含末尾不完整批次。验证和测试复用训练确定的缩放。能量分母中位数在每个被试内部的有效源电场之间计算。数据划分、完整电场指标和计时方法见[评估与可重复实验](paper_reproduction.md)。
 
 <a id="real-data-manifest"></a>
 
@@ -71,6 +71,10 @@ v1 GP 目标采用：
 2. `fem_labels_v1.json`；
 3. `training_loss_statistics_v2.json`；
 4. `training_physics_pool_v1.json`。
+
+加载器重新验证 prepared subject 与全部 75 个 FEM 标签文件，核对源顺序、查询顺序、电导率表及 `sigma / 1.654` 变换、数组形状、dtype、有限值和文件大小。分组决定 `train`、`validation` 或可选 `test` 分区，同一组不能跨分区，训练与验证分区均为必需。
+
+修改训练配置、分组、引用数据路径或源顺序会改变运行合同，已有状态不能直接恢复到不同合同的运行。
 
 <a id="asset-preparation"></a>
 
@@ -97,20 +101,19 @@ head2field-prepare-statistics \
 物理准备分为三个阶段，保证验证 FEM 值不能参与阈值拟合：
 
 ```bash
-# Run for every train and validation subject. This produces geometry plus raw
-# FEM residual/scale only; it does not fit a threshold.
+# 对每个训练和验证被试生成几何及原始 FEM 残差/尺度，不拟合阈值。
 head2field-prepare-physics raw \
   --prepared-subject prepared/subject-a \
   --fem-labels fem/subject-a \
   --output-dir derived/subject-a/physics-raw-v1
 
-# Supply train-partition raw pools only. Repeating the option is supported.
+# 仅传入训练分区的原始池；支持重复指定该选项。
 head2field-prepare-physics fit \
   --train-raw-pool derived/subject-a/physics-raw-v1/training_physics_raw_pool_v1.json \
   --train-raw-pool derived/subject-b/physics-raw-v1/training_physics_raw_pool_v1.json \
   --output-dir derived/train-only-physics-statistics-v1
 
-# Apply the same train-fitted statistics to each train or validation raw pool.
+# 将同一份训练集拟合统计应用于每个训练或验证原始池。
 head2field-prepare-physics finalize \
   --raw-pool derived/subject-a/physics-raw-v1/training_physics_raw_pool_v1.json \
   --statistics derived/train-only-physics-statistics-v1/training_physics_statistics_v1.json \
@@ -137,7 +140,7 @@ head2field-train \
   --output-dir runs/synthetic-smoke
 ```
 
-该流程以 CPU FP32 执行两个训练步，经过真实模型 forward、稳定能量损失、四类物理算子、训练状态机和确定性验证。小模型明确仅供测试，不接受官方 N128 初始化权重。
+该流程以 CPU FP32 最多运行两个 epoch，经过模型 forward、稳定能量损失、四类物理算子、训练状态机和确定性验证。小模型仅供测试，不接受 N128 预训练初始化权重。
 
 <a id="real-data-training"></a>
 
@@ -191,4 +194,4 @@ train_state_step_000005000.pt
 
 `best_model.pt` 是按验证损失选择的裸模型 state dictionary，返回的内存模型恢复到该权重以进行测试。恢复状态保留最新训练模型及完整优化器/调度器状态。中断运行导出已完成验证 epoch 中的最优 checkpoint。真实数据清单含 `test` 分区时，在达到 epoch 预算或早停后，使用恢复的最优模型评估一次，写入 `test_metrics_v1.json`。人为中途停止训练不触发测试评估。
 
-这些是用户本地的自定义资产，不自动成为官方 v1 权重。授权队列数据不随软件包分发。
+这些输出是自定义模型产物。用于推理前，应记录对应配置、数据划分和评估结果。参与者数据由用户另行提供。

@@ -61,7 +61,9 @@ all of the following identity inputs exist:
 - exactly one root-level `*.msh` head mesh; and
 - the exact external SimNIBS version, which must be `4.6.0`.
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+The `charm_runtime_v1.json` manifest records the T1, tissues, unique head mesh,
+and SimNIBS version for this run. Assembly and FEM commands use this record to
+check that their inputs come from the same head model.
 
 The resulting head-model directory is a durable external runtime output,
 separate from the compact prepared-subject directory.
@@ -73,10 +75,16 @@ head-model directory. It first validates `charm_runtime_v1.json` and requires
 the supplied T1 and tissues to match that exact CHARM runtime identity. By
 default it then reads
 `eeg_positions/EEG10-10_UI_Jurak_2007.csv`, requires exactly the fixed 76-name
-set, and reorders its finite world-RAS coordinates to the frozen list with Oz
+set, and reorders its finite world-RAS coordinates to the fixed list with Oz
 first. Callers therefore do not have to pre-create name or coordinate files.
 The paired `--electrode-names-json` and `--electrode-coords-mm-npy` options are
 retained only as an explicit, equally strict adapter override. Assembly then:
+
+1. Validates canonical volume geometry and tissue values.
+2. Copies the prepared T1 and tissues and creates float32 scalar conductivity.
+3. Saves GM/WM voxel queries in C-order and the ordered cap files.
+4. Writes and validates the prepared manifest, checks source files are unchanged,
+   and publishes the new directory from staging.
 
 The prepared directory copies only its prepared T1 and final-tissues inputs; it
 does not copy or silently select a mesh. The mesh stays in the external CHARM

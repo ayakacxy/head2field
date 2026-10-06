@@ -113,7 +113,10 @@ Co-authored-by: Codex <codex@openai.com>
 
 ## Data, dependencies, and licensing
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+Do not include participant data, cohort manifests, complete resume states, or
+generated research outputs in source changes. The bundled v1 weights and their
+checksums are package resources with a defined model contract. See
+[data use](DATA_USE.md) and [weight documentation](../weights/README.md).
 
 Document the origin and license of copied or adapted code. Add no templates,
 atlases, datasets, binaries, or other third-party assets without appropriate

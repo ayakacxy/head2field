@@ -46,10 +46,11 @@ head2field-train \
 ```
 
 The dataset has one fictional training subject and one fictional validation
-subject with disjoint groups, the frozen 75-source order, and analytic arrays on
+subject with disjoint groups, the fixed 75-source order, and analytic arrays on
 an 8-cube grid. The runner uses a test-only small network and CPU FP32. It
 exercises and checks the install, training-step, state, RNG, sampler, and resume
-machinery; it cannot reproduce the official weight or paper metrics.
+machinery. It does not train the full pretrained architecture or measure
+field-prediction accuracy.
 
 The standalone script
 `generate_synthetic_training_dataset.py` creates the same dataset when the CLI

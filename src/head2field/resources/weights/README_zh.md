@@ -26,5 +26,4 @@ model = load_head2field_v1_weights(device="cpu")
 训练输出的 `best_model.pt` 是裸模型权重；`train_state_step_*.pt` 仅用于本地恢复。
 新训练产物需要独立评价。
 
-本次代码更新对齐论文训练设置，尚未重新训练随包权重。分发时保留模型版本、架构、许可证和
-[数据使用说明](../docs/DATA_USE.md)。完整 API 见[推理说明](../docs/zh/inference.md)。
+软件版本、模型结构和权重校验值分别记录。修改训练配置影响新的训练运行，已有预训练张量仍保留各自的身份。分发权重时保留模型版本、结构、许可证和[数据使用说明](../docs/DATA_USE_zh.md)。完整 API 见[推理说明](../docs/zh/inference.md)，比较与计时方法见[评估说明](../docs/zh/paper_reproduction.md)。

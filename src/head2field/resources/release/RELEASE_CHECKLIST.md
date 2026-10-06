@@ -2,8 +2,7 @@
 
 [English](RELEASE_CHECKLIST.md) · [简体中文](RELEASE_CHECKLIST_zh.md)
 
-Use this checklist for each software release. It is a repeatable maintainer
-workflow, not a historical record of completed checks.
+Maintainers can use this checklist to prepare and verify a software release.
 
 ## Upload inventory
 
@@ -53,12 +52,7 @@ The verified pretrained v1 weight file is explicitly included.
 - [ ] Run Markdown lint with the repository configuration and validate local
   links. Keep only the two READMEs at the root.
 - [ ] Record the actual software versions, GPU, test results, and artifact
-  checksums. Synthetic test results do not establish real-cohort reproduction.
-
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate
-order, shapes, dtypes, and finite values directly. Resume compares the full
-configuration and dataset manifest. Regenerate statistics for the current
-50/100 mm regions and training split.
+  checksums. Synthetic tests verify software behavior; model accuracy needs evaluation data.
 
 ## Build and artifact contents
 
@@ -91,11 +85,9 @@ configuration and dataset manifest. Regenerate statistics for the current
 - [ ] Commit reviewed changes with the appropriate contributor attribution;
   create a version tag pointing to the verified source commit.
 - [ ] Publish the tag, release notes, wheel, source archive, and `SHA256SUMS`.
-  A formal `0.1.0` release uses tag `v0.1.0` and disables the prerelease flag.
+  The tag must match the software version; formal releases disable the prerelease flag.
 - [ ] Preserve the repository visibility selected by the owner. Check repository,
   release, citation, and download links with the appropriate access permissions.
 - [ ] Read back the release name, tag, draft/prerelease state, commit, and assets.
   Download the assets and compare their SHA-256 values with the recorded checksums.
 - [ ] Update both README release badges to link to the published version.
-  For private repositories, use a static version badge that does not require
-  an external service to read private release metadata.

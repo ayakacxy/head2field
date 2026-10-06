@@ -13,7 +13,10 @@ predictions, training statistics/caches, logs, and training-resume states.
 The software is licensed under [GPL-3.0-only](LICENSE_GUIDE.md). This code license does
 not grant access to upstream datasets or replace their data-use terms.
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+The wheel and source archive include the v1 model weights, checksums, model
+card, weight documentation, license information, and data-use notices. The
+weights are a bare model state dictionary; a tensor-only format does not replace
+the terms governing the training data. See [weights](../weights/README.md).
 
 Users obtain their own imaging data and install external scientific dependencies
 under the applicable terms. No participant dataset, template, atlas, or SimNIBS

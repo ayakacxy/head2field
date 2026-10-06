@@ -29,7 +29,9 @@ loader to use compatible custom weights. Training exports `best_model.pt` as a
 bare state dictionary; complete `train_state_step_*.pt` files are for local
 resume only. Each new training output needs its own evaluation.
 
-This code update aligns the training recipe with the manuscript; it does not
-retrain the bundled asset. Keep the model version, architecture, license, and
-[data-use notice](../docs/DATA_USE.md) with distributed weights. See
-[inference](../docs/en/inference.md) for the prediction API.
+Track the software version, model architecture, and weight checksum separately.
+Changing a training configuration affects new training runs; existing pretrained
+tensors retain their own identity. Keep the model version, architecture, license,
+and [data-use notice](../docs/DATA_USE.md) with distributed weights. See
+[inference](../docs/en/inference.md) for the prediction API and
+[evaluation](../docs/en/paper_reproduction.md) for comparison and timing guidance.

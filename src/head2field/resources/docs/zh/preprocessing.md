@@ -52,7 +52,7 @@ python -m head2field.preprocessing canonicalize --help
 - 根目录唯一的 `*.msh` 头网格；
 - 精确的外部 SimNIBS 版本 `4.6.0`。
 
-运行时直接核对参数、分组、相对路径、文件大小、坐标顺序、shape、dtype 和有限值。训练恢复比较完整配置与数据清单；统计必须按当前 50/100 mm 设置和训练划分生成。
+`charm_runtime_v1.json` 记录该次运行的 T1、组织图、唯一头网格和 SimNIBS 版本。组装与 FEM 命令通过此记录检查输入是否来自同一个头模型。
 
 生成的头模型目录是持久保存的外部运行时输出，与紧凑的 prepared subject 目录分别管理。
 
@@ -61,6 +61,11 @@ python -m head2field.preprocessing canonicalize --help
 ## 阶段 3：prepared subject 组装
 
 组装接收 canonical T1、`final_tissues.nii.gz` 和当前 CHARM 头模型目录。首先验证 `charm_runtime_v1.json`，要求输入 T1 与组织图匹配该次 CHARM 运行身份。默认读取 `eeg_positions/EEG10-10_UI_Jurak_2007.csv`，要求精确的固定 76 名称集合，将有限的 world-RAS 坐标重排为 Oz 优先的固定列表；用户不需提前生成名称与坐标文件。成对的 `--electrode-names-json`、`--electrode-coords-mm-npy` 选项保留为同样严格的显式 adapter override。随后执行：
+
+1. 验证 canonical 体积的空间几何和组织数值。
+2. 复制准备后的 T1 与组织图，生成 float32 标量电导率。
+3. 按 C-order 保存 GM/WM 体素查询及有序 cap 文件。
+4. 写入并验证 prepared 清单，检查来源文件未改变，由 staging 发布新目录。
 
 prepared 目录仅复制准备后的 T1 和最终组织图，不复制或隐式选择网格。网格保留于外部 CHARM 头模型目录。下游 FEM 规划与执行必须提供同一个根目录唯一网格，并同时对照 `charm_runtime_v1.json` 和 prepared 清单中的 `head_model_provenance` 验证。
 

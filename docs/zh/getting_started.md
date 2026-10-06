@@ -66,7 +66,7 @@ head2field-predict \
   --device cpu
 ```
 
-运行时直接核对参数、分组、相对路径、文件大小、坐标顺序、shape、dtype 和有限值。训练恢复比较完整配置与数据清单；统计必须按当前 50/100 mm 设置和训练划分生成。
+命令在预测前验证 prepared 输入与模型权重，输出 `[75,Q,3]` float32 电场基底、查询坐标、电极对和清单。`Q` 是 prepared GM/WM 查询行数。每个 source→Oz 电场对应源 `+1 mA`、Oz `-1 mA`，分量为 world-RAS `[Ex,Ey,Ez]`，单位为 `V/m`。
 
 无需将整个数组加载到 RAM 即可读取：
 

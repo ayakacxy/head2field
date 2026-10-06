@@ -4,75 +4,53 @@
 
 [English](CHANGELOG.md) · [简体中文](CHANGELOG_zh.md)
 
-本文件记录软件的重要变化。模型合同版本 `v1` 与软件版本分别管理；更新软件包本身并不意味着生成了新的训练模型。
+软件版本与 Head2Field v1 模型合同分别管理。
+
+## 未发布
+
+- 用户指南按安装、输入准备、训练、推理、评估和运行时间测量组织。
+- 明确权重兼容性，补齐工作流程说明，保持中英文文档及随包副本一致。
 
 <a id="010"></a>
 
 ## 0.1.0
 
-<a id="release-assets"></a>
+### 安装与分发
 
-### 发布资产
-
-- 发布 `v0.1.0` Git 标签与软件 Release，提供 wheel、源码分发包及 `SHA256SUMS`。
-- 将安装示例与引用元数据更新至 `0.1.0`，添加圆角版本徽章，补齐中英文发布验证清单。
-
-<a id="documentation-and-code-readability"></a>
-
-### 文档与代码可读性
-
-- 所有公开指南提供英文与简体中文版本，正文保持当前语言跳转，每页可切换对应语言，并随安装包提供副本。
-- 技术指南按 `docs/en/` 和 `docs/zh/` 分类，两边使用相同文件名；README 阅读入口跳转到对应语言的指南。
-- 将项目说明文档移入 `docs/`，根目录保留中英文 README，并同步导航、打包元数据和随包文档副本。
-- 记录贡献者署名规则与 Codex 共同提交者标记。
-
-- 新增安装后使用指南和代码阅读指南，补充推理分块与源电流组合说明，并同步安装包内的技术文档。
-- 明确核心张量与坐标 API，完善英文报错；将推理中的电极对索引重映射提取为独立函数，改进稳定能量损失变量命名，保留预训练权重、模型参数名和现有配置值。
+- 提供 `head2field` Python 包、九个工作流程 CLI 入口，以及预处理/FEM 可选依赖。
+- `v0.1.0` 标签对应可安装 wheel、源码分发包和 `SHA256SUMS`。
+- 提供中英文 README、技术指南、模型与数据使用说明、示例及随包配置/schema 资源。
 
 <a id="bundled-pretrained-model"></a>
 
 ### 内置预训练模型
 
-- wheel 和源码分发包包含已验证的 Head2Field v1 权重及其校验文件。
-- 推理默认使用内置预训练模型；`--weights` 可指定兼容的自定义权重。
-- `load_head2field_v1_weights()` 在未指定路径时加载内置模型。
-
-<a id="head2field-naming"></a>
-
-### Head2Field 命名
-
-- 软件包与导入命名空间为 `head2field`，命令采用 `head2field-*`。
-- 版本化模型 API 为 `Head2FieldV1`、`create_head2field_v1()`、`load_head2field_v1_weights()` 和 `Head2FieldInferenceSession`。
-- 模型配置为 `configs/head2field_v1.json`，权重文件为 `head2field_v1_weights.pth`。执行配置、损失、模型结构、算子及预测标识采用 `head2field` 前缀。
-
-<a id="default-training-settings"></a>
-
-### 默认训练设置
-
-- 默认训练配置、统计生成与批次读取使用 50/100 mm 径向分区。
-- 能量分母采用每个被试内部各源电场的中位数，记录在 `training_loss_statistics_v2` 清单中。
-- 每步监督损失缩放为 `M / (75 * N_train)`，包含末尾不完整批次，并绑定到训练运行合同。
-- 补充方法与代码对应、实验范围、计时来源说明，更新论文标题与引用元数据。
+- 两种分发包均提供仅含张量的 Head2Field v1 权重及校验文件，默认自动加载。
+- `--weights` 可选择兼容的自定义权重。
+- 固定 v1 工厂及严格 FP32 state dictionary 加载器核对参数名、张量形状和标量总数。
 
 <a id="workflows"></a>
 
 ### 工作流程
 
-运行时直接核对参数、分组、相对路径、文件大小、坐标顺序、shape、dtype 和有限值。训练恢复比较完整配置与数据清单；统计必须按当前 50/100 mm 设置和训练划分生成。
+- T1 准备、外部 CHARM 头模型、标量电导率、GM/WM 查询组装及标准 cap 处理。
+- Oz 参考 SimNIBS 先导场生成、求解器输出验证和有序 FEM 标签导出。
+- 分块先导场推理、被试特征缓存、电流模式合成及明确的输出清单。
+- 数据集、缓存、统计量和物理池准备，验证坐标、源顺序和单位合同。
 
 <a id="training"></a>
 
 ### 训练
 
-- 使用 CUDA FP16 AMP 和 AdamW，学习率为 `2e-4`，weight decay 为 `1e-4`；每步八个 source→Oz 电极对，查询分块包含 49,152 个 GM/WM 位置。
-- 每个 epoch 完整遍历源电极与查询组合，最多运行 25 个 epoch，采用覆盖 25 个 epoch 的余弦调度。
-- 每轮结束时以 `a(t)=1` 验证组合目标；连续五轮无改善时早停，导出验证最优 checkpoint，并支持可选的测试集评估。
-- 提供独立的 CPU FP32 合成数据配置，用于安装与恢复检查。
+- CUDA FP16 AMP 和 AdamW，初始学习率 `2e-4`，weight decay `1e-4`，每步八个 source→Oz 电极对和 49,152 个查询。
+- 稳定能量监督采用 50/100 mm 径向分区及 `training_loss_statistics_v2`，全局/径向/高场权重为 0.60/0.30/0.10。
+- 积分物理损失仅使用训练集校准，四项权重均为 5。
+- 完整 epoch、最多 25 轮、余弦调度、验证、五轮早停及验证最优模型选择。
+- 完整本地恢复状态及可选的最终测试评估。
+- 独立的小型 CPU FP32 合成配置用于安装与恢复检查。
 
-<a id="documentation-and-packaging"></a>
+### 兼容性与项目资源
 
-### 文档与打包
-
-- 提供英文和中文 README、流程指南、模型与数据使用说明、贡献指南和可复用发布清单。
-- 包含确定性合成示例、schema、包资源、依赖声明和实现来源记录。
-- 内置仅含张量的预训练权重；Python 分发包排除训练恢复状态和自定义 checkpoint。
+- v1 模型 API 包括 `Head2FieldV1`、`create_head2field_v1()`、`load_head2field_v1_weights()` 和 `Head2FieldInferenceSession`。
+- 模型采用各向同性标量电导率，输出 `[75, Q, 3]` world-RAS 向量；单位为 V/m，对应源 +1 mA、Oz −1 mA。
+- 软件分发包排除参与者数据、生成的研究数组、自定义 checkpoint 和完整训练恢复状态。

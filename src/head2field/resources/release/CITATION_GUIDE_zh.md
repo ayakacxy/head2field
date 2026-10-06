@@ -24,4 +24,4 @@
 
 [CITATION.cff](../CITATION.cff) 中的软件引用标识为 **Head2Field**，版本 **0.1.0**，软件作者为 **ayakacxy**。请记录研究使用的软件版本；软件版本与 Head2Field v1 模型合同独立管理。
 
-同时引用[数据使用说明](DATA_USE_zh.md)和[实现来源](SOURCE_PROVENANCE_zh.md)中相关的方法与数据来源。[复现指南](zh/paper_reproduction.md)说明了方法组成、代码、模型资产及评估范围之间的对应关系。
+同时引用[数据使用说明](DATA_USE_zh.md)和[实现与依赖](SOURCE_PROVENANCE_zh.md)中相关的方法与数据来源。[评估指南](zh/paper_reproduction.md)说明数据划分、电场对比和运行时间测量。

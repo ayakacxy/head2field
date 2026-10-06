@@ -4,11 +4,7 @@
 
 [English](MODEL_CARD.md) · [简体中文](MODEL_CARD_zh.md)
 
-本软件包提供 Head2Field 的**官方实现**，对应论文：
-
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+本文介绍 Head2Field v1 的输入输出、默认训练配置、内置权重及预期用途。方法参考文献见[引用指南](CITATION_GUIDE_zh.md)。
 
 <a id="model-summary"></a>
 
@@ -46,21 +42,19 @@ v1 合同固定以下内容：
 
 ## 训练
 
-可执行的真实数据训练配置采用 AdamW，初始学习率 `2e-4`，weight decay `1e-4`。每步处理一个被试、八个 source→Oz 电极对，以及 49,152 个 GM/WM 查询位置，使用 CUDA FP16 AMP 和 1.0 的梯度范数裁剪。
+默认真实数据训练配置采用 AdamW，初始学习率 `2e-4`，weight decay `1e-4`。每步处理一个被试、八个 source→Oz 电极对，以及 49,152 个 GM/WM 查询位置，使用 CUDA FP16 AMP 和 1.0 的梯度范数裁剪。
 
 每个 epoch 完整覆盖所有训练被试的源电极批次与查询分块组合。最多运行 25 个 epoch，余弦调度覆盖 25 个 epoch。每轮结束时以数据与物理组合目标验证，`a(t)=1`。连续五轮验证无改善时停止，测试评估使用验证最优 checkpoint。
 
 数据目标采用 50/100 mm 径向分区和固定的每步缩放 `M / (75 * N_train)`，统计合同为 `training_loss_statistics_v2`。
 
-运行时直接核对参数、分组、相对路径、文件大小、坐标顺序、shape、dtype 和有限值。训练恢复比较完整配置与数据清单；统计必须按当前 50/100 mm 设置和训练划分生成。
-
-配置还保留了已验证权重原始训练运行的历史元数据。该记录与当前可执行训练设置分别管理，不控制训练器。
+训练目标包含稳定能量数据损失、环流、WM/GM 法向电流连续性、切向电场连续性和通量项。物理阈值由训练数据拟合。训练、验证和测试采用分组互斥划分，数据路径纳入运行合同。损失设置、数据准备与恢复步骤见[训练说明](zh/training.md)。
 
 <a id="verified-weight-format"></a>
 
-## 已验证权重格式
+## 内置权重格式
 
-v1 参考权重文件包含：
+内置 v1 权重文件包含：
 
 | 字段 | 内容 |
 | --- | --- |

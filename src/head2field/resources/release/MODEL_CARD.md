@@ -2,12 +2,9 @@
 
 [English](MODEL_CARD.md) · [简体中文](MODEL_CARD_zh.md)
 
-This package provides the **official implementation** of Head2Field, described
-in our paper:
-
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+This card describes the Head2Field v1 model, its inputs and outputs, training
+defaults, bundled weights, and intended use. Method references are listed in the
+[citation guide](CITATION_GUIDE.md).
 
 ## Model summary
 
@@ -51,7 +48,7 @@ See [input contracts](en/input_contract.md),
 
 ## Training
 
-The executable real-data profile uses AdamW with initial learning rate `2e-4`
+The default real-data profile uses AdamW with initial learning rate `2e-4`
 and weight decay `1e-4`. Each step processes one subject, eight source-to-Oz
 pairs, and query chunks of 49,152 GM/WM locations. Training uses CUDA FP16 AMP
 and gradient norm clipping at 1.0.
@@ -71,9 +68,11 @@ thresholds are fitted on training data. Group-disjoint train/validation/test
 partitions and asset paths are part of the run contract. See
 [training](en/training.md) for loss settings, asset preparation, and resume.
 
-## Verified weight format
+<a id="verified-weight-format"></a>
 
-The reference v1 weight file contains:
+## Bundled weight format
+
+The bundled v1 weight file contains:
 
 | Field | Value |
 | --- | --- |

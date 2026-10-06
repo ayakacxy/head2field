@@ -1,34 +1,33 @@
-# Reproducibility and evaluation
+<a id="reproducibility-and-evaluation"></a>
+
+# Evaluation and reproducibility
 
 [English](paper_reproduction.md) · [简体中文](../zh/paper_reproduction.md)
 
-Head2Field is described in:
+This guide explains how to prepare repeatable training runs, compare predicted
+fields with FEM references, and measure runtime. Start with
+[training](training.md) for commands and [inference](inference.md) for the
+prediction API.
 
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+## Workflow and implementation
 
-Publication identifiers should be added to `CITATION.cff` when available.
-
-## Method-to-code map
-
-| Manuscript | Implementation | Configuration / contract |
+| Stage | Implementation | Configuration or output |
 | --- | --- | --- |
-| Section 2.2.1: 256-cube, 1 mm RAS T1 preparation | `preprocessing/`, `inputs.py` | `preprocessing_v1.json`; HCP ACPC inputs bypass rigid estimation |
-| Sections 2.2.2–2.2.3: scalar conductivity and 75 source-to-Oz FEM fields | `preprocessing/conductivity.py`, `fem_labels/` | `fem_labels_v1.json`; 76 cap electrodes; 1 mA; world-RAS |
-| Section 2.3: CNN/FPN, axial attention, query/electrode tokens and shared responses | `model.py`, `_spec.py` | `head2field_v1.json`; fixed v1 weight schema |
-| Equations 7–9: energy-normalized supervision | `training/cache.py`, `dataset.py`, `losses.py` | Existing training configs; 50/100 mm radial boundaries; weights 0.60/0.30/0.10 |
-| Equations 10–13: FEM-calibrated integral physics | `training/physics.py`, `physics_data.py`, `steps.py` | Four weights of 5; Huber delta 0.1; kappa 1; 10,000-step ramp |
-| Section 2.5.2: complete epochs, validation and early stopping | `training/runner.py`, `validation.py`, `cli.py` | AdamW; 25 epochs; cosine horizon 25; patience 5; seed 42 |
-| Cached complete-basis inference | `inference.py`, `cli.py` | Ordered `[75, Q, 3]` float32 output in V/m for 1 mA |
+| T1 preparation | `preprocessing/`, `inputs.py` | `preprocessing_v1.json`; 256³, 1 mm RAS grid |
+| Conductivity and FEM labels | `preprocessing/conductivity.py`, `fem_labels/` | `fem_labels_v1.json`; 75 source-to-Oz fields for 1 mA |
+| Anatomical encoding and field prediction | `model.py`, `_spec.py` | `head2field_v1.json`; fixed v1 architecture |
+| Energy-normalized supervision | `training/cache.py`, `training/dataset.py`, `training/losses.py` | Full-field statistics; 50/100 mm regions; weights 0.60/0.30/0.10 |
+| Integral physics losses | `training/physics.py`, `training/physics_data.py`, `training/steps.py` | Training-only calibration; four weights of 5; 10,000-step ramp |
+| Epoch training and validation | `training/runner.py`, `training/validation.py`, `training/cli.py` | AdamW; up to 25 epochs; cosine scheduling; patience 5 |
+| Complete-basis inference | `inference.py`, `cli.py` | Ordered `[75, Q, 3]` float32 output in world-RAS, V/m |
 
-Paths in the implementation column are relative to `src/head2field/`.
-Configuration files are in `configs/`; identical copies ship in the wheel.
+Implementation paths are relative to `src/head2field/`. Configuration files
+are in `configs/`; matching copies are included in the wheel.
 
-## Default training configuration and derived assets
+## Training configuration and derived data
 
 Use `configs/training_v1.json` for real-data training and
-`configs/training_smoke_v1.json` for synthetic installation checks. Both use
+`configs/training_smoke_v1.json` for synthetic installation checks. Both define
 the following near/middle/far regions:
 
 ```text
@@ -38,54 +37,65 @@ middle: 50 mm <= rho < 100 mm
 far: rho >= 100 mm
 ```
 
-Statistics are computed from each subject's complete FEM fields, before query
-chunking. The energy floor uses the median across that subject's valid source
-fields, rather than fitting a cross-subject statistic. Physics calibration uses
-training subjects only, then stays frozen for validation and test subjects.
-The per-step data-loss scale is `M / (75 * N_train)`, where `M` includes every
-source/query combination and partial final batches in a complete training epoch.
-The same training-derived scale is used for validation and test objectives.
+Energy statistics use each subject's complete FEM fields before query chunking.
+The denominator floor uses the median across that subject's valid source fields.
+Fit physics calibration on training subjects only, then apply the same
+calibration to validation and test subjects.
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+The per-step data-loss scale is `M / (75 * N_train)`, where `M` counts every
+source/query combination in a complete training epoch, including partial final
+batches. Validation and test use the scale derived from the training partition.
+Regenerate statistics when changing the regional settings or training split.
 
-Prepared subjects, FEM labels, target-array caches and physics pools carry
-their own explicit contracts. Complete resume states require an identical
-configuration and run contract. An inference-only state dict initializes the
-fixed v1 network with a fresh optimizer and training state.
+Prepared subjects, FEM labels, target caches, and physics pools have explicit
+validation contracts. Resume requires the saved configuration and dataset
+contract to match the new run. Initializing from an inference state dictionary
+starts a fresh optimizer and training state.
 
-## Experimental reproduction scope
+## Dataset splits and evaluation
 
-The manuscript uses 200 HCP subjects and a family-disjoint 128/32/40 split
-(seed 42), with nested training sizes 10, 20, 40, 80 and 128. Recreate the split
-from authorized data access; participant/family manifests are excluded from
-the source release. The training command accepts a group-disjoint manifest,
-but does not reconstruct the manuscript's private family assignments.
+Create a dataset manifest with disjoint training, validation, and optional test
+groups. Put related participants in the same group when the study design
+requires it. Keep group assignments, random seeds, preprocessing settings, and
+weight checksums with the experiment record. Input datasets and participant
+manifests are supplied by the user.
 
-For Equations 14–16, compute relative L2 and mean direction cosine on matched
-world-RAS vectors. Define high-field masks from FEM magnitudes, with inclusive
-percentile thresholds. Average source errors within each subject before cohort
-averaging. Amplitude retention uses within-subject source medians followed by
-the cohort median and subject P10–P90. Chunkwise relative L2 means are training
-diagnostics; they are not a substitute for these complete-field paper metrics.
+Compare prediction and FEM vectors at identical query rows, in the same
+source order, coordinate frame, current convention, and units. For complete-field
+evaluation:
 
-The manuscript's experiments use different model assets: the tDCS comparison
-uses the 80-subject model, while complete-basis, TIS and displaced-electrode
-experiments use the 128-subject model. The single verified state dict does not
-supply every training scale, the data-only ablation, or a comparator model.
+- Compute relative L2 error and mean direction cosine on matched vectors.
+- Define high-field masks from FEM magnitudes and record percentile thresholds,
+  including the rule for values equal to the threshold.
+- Average source errors within each subject before averaging across subjects.
+- For amplitude retention, compute source medians within each subject, then
+  report the cohort median and subject P10–P90.
 
-The release provides the reusable basis and coordinate-query inference API.
-Montage comparisons, the TIS optimizer, displaced-position FEM generation,
-cohort statistical tests, and figure-generation pipelines are research
-workflows outside this source package. Their results cannot be reproduced by
-running the synthetic example or the training command alone.
+Chunkwise training diagnostics and complete-field evaluation summarize different
+quantities. Record the aggregation and masks used for each reported metric.
 
-## Weight and performance provenance
+The package supplies one pretrained v1 state dictionary. Comparisons involving
+other data splits, training sizes, seeds, ablations, or baseline models need
+separately trained and evaluated weights. Synthetic examples check software
+operation with a small test model; they do not measure pretrained-model accuracy.
 
-The manuscript reports 8.928 s including device-to-host transfer, and 12.073 s
-including float32 output writing/flushing, at 1,392,017 GM/WM queries on one
-representative subject. It used an RTX 2080 Ti, warmup and PyTorch compilation.
-The approximate 100-fold speedup concerns lead-field generation; the estimated
-4.7-fold end-to-end speedup also includes about 20 minutes for segmentation.
-These are manuscript measurements, not benchmarks of the default eager CLI.
-Record input loading, preprocessing, model loading, compilation, warmup,
-transfer and output I/O separately when measuring another deployment.
+## Measuring runtime
+
+Record the hardware, software versions, query count, chunk sizes, and execution
+mode. Measure input loading, preprocessing, model loading, compilation when
+used, warmup, inference, device-to-host transfer, and output I/O separately.
+
+Use CUDA synchronization at measurement boundaries for GPU execution. Distinguish
+cold starts from repeated runs with cached model or subject features. State
+whether output writing and flushing are included. End-to-end measurements should
+include every stage needed by the intended workflow; report lead-field inference
+separately when comparing that stage alone.
+
+## Using the results
+
+The reusable basis and Python query API support application-specific field
+synthesis and evaluation. Current optimization, cohort statistical analysis,
+and figure generation are separate application workflows. Preserve the basis
+manifest, source currents, query coordinates, and weight identity with derived
+results. See the [model card](../MODEL_CARD.md) for intended use and limitations,
+and the [citation guide](../CITATION_GUIDE.md) for references.

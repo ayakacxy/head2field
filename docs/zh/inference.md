@@ -44,7 +44,11 @@ head2field-predict \
 
 ## 处理顺序
 
-运行时直接核对参数、分组、相对路径、文件大小、坐标顺序、shape、dtype 和有限值。训练恢复比较完整配置与数据清单；统计必须按当前 50/100 mm 设置和训练划分生成。
+1. 验证 prepared 数组、空间元数据及电极/查询顺序。
+2. 构造 v1 输入张量，严格加载内置或自定义权重。
+3. 在推理 session 中缓存解剖与电极特征。
+4. 按查询顺序分块计算，将全部 75 个电极对电场写入内存映射数组。
+5. 检查输入文件未发生变化，写入查询坐标、电极对记录和预测清单。
 
 分块大小用于控制资源，不改变科学配置。
 
@@ -100,7 +104,7 @@ currents_mA = np.zeros(len(source_names), dtype=np.float32)
 currents_mA[source_names.index("F3")] = 2.0
 currents_mA[source_names.index("F4")] = -2.0
 
-# Compute one query chunk. Apply the same operation to subsequent chunks.
+# 计算一个查询分块，后续分块执行相同操作。
 field_V_per_m = np.einsum("p,pqc->qc", currents_mA, basis[:, :32768, :])
 print(field_V_per_m.shape, "Oz current (mA):", -currents_mA.sum())
 ```
@@ -152,8 +156,8 @@ rows = np.arange(len(subject.gmwm_ijk), dtype=np.int64)
 
 for chunk in session.iter_predictions(rows, electrodes, query_chunk_size=32768):
     field = chunk.prediction.squeeze(0).detach().cpu().numpy()
-    # field has shape [75, number_of_chunk_queries, 3].
-    # chunk.row_indices identifies these rows in subject.gmwm_ijk.
+    # field 的形状为 [75, 当前分块查询数量, 3]。
+    # chunk.row_indices 标识这些查询在 subject.gmwm_ijk 中的行。
 ```
 
 `Head2FieldInferenceSession` 和权重加载工厂是稳定的顶层导出。prepared subject 构建与底层分块流程可通过相应实现模块调用。
@@ -163,3 +167,5 @@ for chunk in session.iter_predictions(rows, electrodes, query_chunk_size=32768):
 <a id="weights-and-reproducibility"></a>
 
 ## 权重与复现
+
+使用内置 v1 state dictionary 或兼容的自定义 FP32 权重，将权重校验值与软件版本、prepared 输入清单及分块设置一同记录。加载和格式要求见[权重说明](../../weights/README_zh.md)，FEM 对比和运行时间测量见[评估说明](paper_reproduction.md)。

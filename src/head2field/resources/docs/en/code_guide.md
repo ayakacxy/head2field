@@ -114,7 +114,7 @@ step function, and runner. The responsibilities are:
 
 | File | Responsibility |
 | --- | --- |
-| `contracts.py` | Validate training configuration and metadata the run contract |
+| `contracts.py` | Validate training configuration and record the complete run contract |
 | `dataset.py` | Verify dataset assets and build supervised/physics tensor bundles |
 | `cache.py` | Prepare query-major targets and full-field energy statistics |
 | `physics_data.py` | Prepare primitive pools and training-only FEM calibration |

@@ -13,9 +13,9 @@ wheel; this guide provides a bilingual entry point to the project's notices.
 
 The bundled pretrained model has its distribution notice in
 [weights](../weights/README.md) and [data use](DATA_USE.md). External software
-licenses and implementation origins are described in
+licenses and package integrations are described in
 [third-party notices](THIRD_PARTY_NOTICES.md) and
-[source provenance](SOURCE_PROVENANCE.md).
+[implementation and dependencies](SOURCE_PROVENANCE.md).
 
 Dataset terms and acknowledgements are listed in [data use](DATA_USE.md).
 Participant images, meshes, FEM outputs, and cohort manifests are obtained

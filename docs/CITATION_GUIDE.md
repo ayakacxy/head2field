@@ -25,6 +25,6 @@ Record the package version used in your work; the software version and the
 Head2Field v1 model contract are tracked independently.
 
 Also cite the relevant methods and data sources described in
-[data use](DATA_USE.md) and [source provenance](SOURCE_PROVENANCE.md).
-The [reproducibility guide](en/paper_reproduction.md) describes the mapping
-between method components, code, model assets, and evaluation scope.
+[data use](DATA_USE.md) and [implementation and dependencies](SOURCE_PROVENANCE.md).
+The [evaluation guide](en/paper_reproduction.md) describes dataset splits,
+field comparisons, and runtime measurements.

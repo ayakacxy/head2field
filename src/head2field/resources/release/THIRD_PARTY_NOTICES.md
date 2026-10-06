@@ -29,7 +29,14 @@ preparing a release.
 
 ## What a release artifact contains
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+- The wheel contains Python code, resources, and the allowlisted pretrained v1
+  `.pth` file with its checksum. Other checkpoints, training states, NIfTI,
+  meshes, HDF5, NPY/NPZ, native libraries, and third-party datasets are excluded.
+- The source archive follows the same data and weight boundaries.
+- Bundled weights are a bare state dictionary with no optimizer, scheduler,
+  participant identifier, or training-resume state.
+- Containers, Conda environments, wheelhouses, and standalone binaries have
+  separate dependency inventories; review their actual bundled license notices.
 
 ## Authoritative upstream references
 

@@ -22,7 +22,7 @@ wheel-only installation, copy the bundled defaults as shown in
 
 ## Training settings
 
-All real-data training scales use the same settings:
+The default real-data profile specifies:
 
 | Setting | Value |
 | --- | --- |
@@ -78,8 +78,8 @@ masks or fitted thresholds.
 The per-step data-loss scale is `M / (75 * N_train)`, fixed across source
 batches and query chunks, including partial tails. Validation and test reuse
 the training-derived scale. The energy denominator median is computed across
-valid source fields within each subject. See [manuscript reproduction](paper_reproduction.md)
-for the method map and experimental scope.
+valid source fields within each subject. See [evaluation and reproducibility](paper_reproduction.md)
+for dataset splits, complete-field metrics, and runtime measurements.
 
 ## Real-data manifest
 
@@ -96,7 +96,7 @@ has an explicit relative path. Each anonymous `subject_key` references:
 The loader revalidates the underlying prepared-subject and all 75 FEM label
 files. It cross-checks source order, query order, conductivity-table ID/values,
 the `sigma / 1.654` transform ID, array shapes, dtypes, finite values, and all
-manifest/file sizees. Groups, rather than individual rows, own the `train`,
+manifest/file sizes. Groups, rather than individual rows, own the `train`,
 `validation`, or optional `test` partition. A group cannot occur in more than
 one partition, and both train and validation are mandatory.
 
@@ -132,20 +132,19 @@ Physics preparation is intentionally three-stage so validation FEM values can
 never fit thresholds:
 
 ```bash
-# Run for every train and validation subject. This produces geometry plus raw
-# FEM residual/scale only; it does not fit a threshold.
+# 对每个训练和验证被试生成几何及原始 FEM 残差/尺度，不拟合阈值。
 head2field-prepare-physics raw \
   --prepared-subject prepared/subject-a \
   --fem-labels fem/subject-a \
   --output-dir derived/subject-a/physics-raw-v1
 
-# Supply train-partition raw pools only. Repeating the option is supported.
+# 仅传入训练分区的原始池；支持重复指定该选项。
 head2field-prepare-physics fit \
   --train-raw-pool derived/subject-a/physics-raw-v1/training_physics_raw_pool_v1.json \
   --train-raw-pool derived/subject-b/physics-raw-v1/training_physics_raw_pool_v1.json \
   --output-dir derived/train-only-physics-statistics-v1
 
-# Apply the same train-fitted statistics to each train or validation raw pool.
+# 将同一份训练集拟合统计应用于每个训练或验证原始池。
 head2field-prepare-physics finalize \
   --raw-pool derived/subject-a/physics-raw-v1/training_physics_raw_pool_v1.json \
   --statistics derived/train-only-physics-statistics-v1/training_physics_statistics_v1.json \
@@ -175,7 +174,7 @@ head2field-train \
   --output-dir runs/synthetic-smoke
 ```
 
-This executes two CPU FP32 steps through the real model forward, stable-energy
+This runs up to two CPU FP32 epochs through the model forward, stable-energy
 loss, four physical operators, train-only state machine, and deterministic
 validation. The small model is explicitly test-only and cannot accept official
 N128 initialization weights.
@@ -257,5 +256,6 @@ that partition once after reaching the epoch budget or early stopping, using
 the restored best model, and writes `test_metrics_v1.json`. A deliberate
 mid-training interruption does not trigger test evaluation.
 
-These are user-local custom artifacts; they do not become the official
-v1 weights. Authorized cohort data are not distributed with the package.
+These outputs are custom model artifacts. Record their configuration, data
+split, and evaluation results before using them for inference. Participant data
+are supplied separately.

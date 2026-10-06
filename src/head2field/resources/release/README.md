@@ -12,7 +12,7 @@
 [![SimNIBS 4.6.0](https://img.shields.io/badge/SimNIBS-4.6.0-6D4AFF?style=flat)](docs/en/preprocessing.md)
 [![License: GPL-3.0-only](https://img.shields.io/badge/License-GPL--3.0--only-blue?style=flat)](docs/LICENSE_GUIDE.md)
 
-[Installation](#installation) · [Quick start](#quick-start) · [Documentation](#documentation) · [Reproduction](#reproduction) · [Citation](#citation)
+[Installation](#installation) · [Quick start](#quick-start) · [Documentation](#documentation) · [Training and evaluation](#reproduction) · [Citation](#citation)
 
 🧠 **Structural MRI** · ⚡ **Continuous neural fields** · 🧭 **World-RAS vectors** · 🔬 **Physics-guided training**
 
@@ -175,7 +175,7 @@ measure prediction accuracy. More examples are in [examples](examples/README.md)
 
 <a id="reproduction"></a>
 
-## 🧪 Training
+## 🧪 Training and evaluation
 
 The default [training_v1.json](configs/training_v1.json) uses
 AdamW (`2e-4`, weight decay `1e-4`), CUDA FP16, eight source pairs and 49,152
@@ -184,8 +184,8 @@ epoch-end validation, and five-epoch early stopping. The validation-best model
 is selected for testing.
 
 The data objective uses 50/100 mm radial regions. [Training and resume](docs/en/training.md)
-covers dataset preparation and checkpoints; [reproducibility](docs/en/paper_reproduction.md)
-describes model assets, evaluation definitions, and timing scope. Participant
+covers dataset preparation and checkpoints; [evaluation and reproducibility](docs/en/paper_reproduction.md)
+describes data splits, field comparisons, and timing methods. Participant
 data and cohort splits are obtained separately.
 
 <a id="documentation"></a>
@@ -200,7 +200,7 @@ data and cohort splits are obtained separately.
 - [Training, validation, and resume](docs/en/training.md)
 - [Inference and output format](docs/en/inference.md)
 - [Model architecture](docs/en/model_architecture.md)
-- [Reproducibility and evaluation](docs/en/paper_reproduction.md)
+- [Evaluation and reproducibility](docs/en/paper_reproduction.md)
 - [Machine-readable data contracts](docs/en/data_contracts.md)
 - [Code guide: modules, tensor shapes, and execution flow](docs/en/code_guide.md)
 - [Model card](docs/MODEL_CARD.md), [data use](docs/DATA_USE.md), and [weight format](weights/README.md)
@@ -208,10 +208,10 @@ data and cohort splits are obtained separately.
 ## 🤝 Contributing
 
 See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development and verification,
-[SOURCE_PROVENANCE.md](docs/SOURCE_PROVENANCE.md) for implementation origins, and
+[implementation and dependencies](docs/SOURCE_PROVENANCE.md) for the package structure, and
 [CHANGELOG.md](docs/CHANGELOG.md) for changes. Synthetic examples check software
-behavior; reproducing paper results requires the corresponding data, weights,
-and evaluation protocol. Maintainers can use the [release checklist](docs/RELEASE_CHECKLIST.md).
+behavior; model comparisons require appropriate data, weights,
+and evaluation metrics. Maintainers can use the [release checklist](docs/RELEASE_CHECKLIST.md).
 
 Public API names and CLI help use English; new source comments and docstrings
 use Chinese. All public guides have English and Simplified Chinese versions,

@@ -2,84 +2,61 @@
 
 [English](CHANGELOG.md) · [简体中文](CHANGELOG_zh.md)
 
-Notable changes to the software are recorded here. The model-contract version
-`v1` and software version are independent: a package update does not by itself
-create a new trained model.
+Software versions and the Head2Field v1 model contract are tracked independently.
+
+## Unreleased
+
+- Organize user guides around installation, input preparation, training,
+  inference, evaluation, and runtime measurement.
+- Clarify weight compatibility, complete the workflow descriptions, and keep
+  English, Chinese, and packaged documents consistent.
 
 ## 0.1.0
 
-### Release assets
+### Installation and distributions
 
-- Publish the `v0.1.0` Git tag and software release with a wheel, source archive,
-  and `SHA256SUMS`.
-- Update installation examples and citation metadata to `0.1.0`, add a rounded
-  release badge, and complete the bilingual release verification checklist.
-
-### Documentation and code readability
-
-- Provide paired English and Simplified Chinese versions of all public guides,
-  with same-language navigation, per-page language switches, and bundled copies.
-- Group technical guides in `docs/en/` and `docs/zh/` with matching filenames;
-  route README reading links to the corresponding language guides.
-- Move supporting project documents into `docs/`, retain the two root READMEs,
-  and update navigation, package metadata, and bundled document copies.
-- Document contributor attribution and the Codex co-author trailer.
-- Add installed-wheel usage and code-reading guides, document chunking and
-  source-current synthesis, and synchronize shipped technical documentation.
-- Clarify core tensor/coordinate APIs and English diagnostics; isolate inference
-  pair-bank remapping and clarify stable-energy loss variables without changing
-  pretrained weights, model parameter names, or existing configuration values.
+- Python package `head2field`, nine workflow CLI entry points, and optional
+  preprocessing/FEM dependencies.
+- Installable wheel, source archive, and `SHA256SUMS` under tag `v0.1.0`.
+- Paired English and Simplified Chinese READMEs, technical guides, model and
+  data-use documentation, examples, and packaged configuration/schema resources.
 
 ### Bundled pretrained model
 
-- The wheel and source archive contain the verified Head2Field v1 weights and
-  their checksum file.
-- Inference uses the bundled pretrained model by default; `--weights` selects
-  compatible custom weights.
-- `load_head2field_v1_weights()` loads the bundled model when no path is supplied.
-
-### Head2Field naming
-
-- Package and import namespace: `head2field`; commands: `head2field-*`.
-- Versioned model API: `Head2FieldV1`, `create_head2field_v1()`, and
-  `load_head2field_v1_weights()` with `Head2FieldInferenceSession`.
-- Model configuration: `configs/head2field_v1.json`; weight asset:
-  `head2field_v1_weights.pth`. Profile, loss, architecture, operator, and
-  prediction identifiers use the `head2field` prefix.
-
-### Default training settings
-
-- Default training profiles use 50/100 mm radial boundaries in configuration,
-  statistics generation and batch consumers.
-- Energy denominators use within-subject source medians, recorded in
-  `training_loss_statistics_v2` manifests.
-- Per-step supervision scaling is `M / (75 * N_train)`, including partial
-  final batches, and is bound to the training run contract.
-- Added method-to-code, experiment-scope and timing-provenance documentation;
-  updated the manuscript title and citation metadata.
+- Tensor-only Head2Field v1 weights and checksums are included in both
+  distributions and loaded by default.
+- `--weights` selects compatible custom weights.
+- The fixed v1 factory and strict FP32 state-dictionary loader validate
+  parameter keys, tensor shapes, and value counts.
 
 ### Workflows
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate
-order, shapes, dtypes, and finite values directly. Resume compares the full
-configuration and dataset manifest. Regenerate statistics for the current
-50/100 mm regions and training split.
+- T1 preparation, external CHARM head modeling, scalar conductivity, GM/WM
+  query assembly, and standard cap handling.
+- Oz-referenced SimNIBS lead-field generation, solver-output validation, and
+  ordered FEM label export.
+- Chunked lead-field inference, subject-feature caching, current-pattern
+  synthesis, and explicit output manifests.
+- Dataset, cache, statistics, and physics-pool preparation with validated
+  coordinate, source-order, and unit contracts.
 
 ### Training
 
-- CUDA FP16 AMP, AdamW with learning rate `2e-4` and weight decay `1e-4`,
-  eight source-to-Oz pairs, and query chunks of 49,152 GM/WM locations.
-- Complete source/query traversal per epoch with a maximum of 25 epochs and an
-  epoch-based cosine schedule over 25 epochs.
-- Epoch-end combined-objective validation with `a(t)=1`, five-epoch early
-  stopping, best validation checkpoint export, and optional test evaluation.
-- A separate CPU FP32 synthetic profile for installation and resume checks.
+- CUDA FP16 AMP and AdamW with initial learning rate `2e-4`, weight decay
+  `1e-4`, eight source-to-Oz pairs, and 49,152 queries per step.
+- Stable-energy supervision with 50/100 mm radial regions and
+  `training_loss_statistics_v2`; global/radial/high-field weights 0.60/0.30/0.10.
+- Integral physics losses with training-only calibration and four weights of 5.
+- Complete epochs, a maximum 25-epoch budget, cosine scheduling, validation,
+  five-epoch early stopping, and validation-best model selection.
+- Complete local resume states and optional final test evaluation.
+- A separate small CPU FP32 synthetic profile for installation and resume checks.
 
-### Documentation and packaging
+### Compatibility and project resources
 
-- English and Chinese READMEs, workflow guides, model/data-use documentation,
-  contribution instructions, and a reusable release checklist.
-- Deterministic synthetic examples, schemas, package resources, dependency
-  notices, and implementation provenance.
-- Bundled tensor-only pretrained weights; training-resume states and custom
-  checkpoints excluded from Python distributions.
+- `Head2FieldV1`, `create_head2field_v1()`, `load_head2field_v1_weights()`, and
+  `Head2FieldInferenceSession` provide the v1 model API.
+- The model uses isotropic scalar conductivity and outputs `[75, Q, 3]`
+  world-RAS vectors in V/m for source +1 mA and Oz −1 mA.
+- Participant data, generated research arrays, custom checkpoints, and complete
+  training-resume states are excluded from the software distributions.

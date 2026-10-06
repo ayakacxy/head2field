@@ -44,7 +44,12 @@ NumPy memory map. Inference uses FP32 and evaluation mode.
 
 ## Processing sequence
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+1. Validate prepared arrays, spatial metadata, and electrode/query order.
+2. Build the v1 input tensors and strictly load the bundled or custom weights.
+3. Cache anatomical and electrode features in an inference session.
+4. Evaluate ordered query chunks and write all 75 pair fields to the memory map.
+5. Verify input files are unchanged, then write coordinates, pair records, and
+   the prediction manifest.
 
 Chunk sizes are resource controls, not scientific profile changes.
 
@@ -102,7 +107,7 @@ currents_mA = np.zeros(len(source_names), dtype=np.float32)
 currents_mA[source_names.index("F3")] = 2.0
 currents_mA[source_names.index("F4")] = -2.0
 
-# Compute one query chunk. Apply the same operation to subsequent chunks.
+# 计算一个查询分块，后续分块执行相同操作。
 field_V_per_m = np.einsum("p,pqc->qc", currents_mA, basis[:, :32768, :])
 print(field_V_per_m.shape, "Oz current (mA):", -currents_mA.sum())
 ```
@@ -153,8 +158,8 @@ rows = np.arange(len(subject.gmwm_ijk), dtype=np.int64)
 
 for chunk in session.iter_predictions(rows, electrodes, query_chunk_size=32768):
     field = chunk.prediction.squeeze(0).detach().cpu().numpy()
-    # field has shape [75, number_of_chunk_queries, 3].
-    # chunk.row_indices identifies these rows in subject.gmwm_ijk.
+    # field 的形状为 [75, 当前分块查询数量, 3]。
+    # chunk.row_indices 标识这些查询在 subject.gmwm_ijk 中的行。
 ```
 
 `Head2FieldInferenceSession` and the weight-loading factory are stable top-level
@@ -168,3 +173,9 @@ collecting GPU tensors retains their memory. Recreate the session after changing
 the model weights or subject data because its caches assume immutable inputs.
 
 ## Weights and reproducibility
+
+Use the bundled v1 state dictionary or compatible custom FP32 weights. Record
+its checksum together with the software version, prepared-input manifest, and
+chunk settings. See [weights](../../weights/README.md) for loading and format
+requirements, and [evaluation](paper_reproduction.md) for FEM comparisons and
+runtime measurements.

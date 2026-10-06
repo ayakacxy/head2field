@@ -18,7 +18,7 @@ the language switch at the top opens the same guide in the other language.
 | [Training](training.md) | Cache and statistics preparation, physics assets, validation, and resume |
 | [Inference](inference.md) | Chunking, Python APIs, output files, and current-pattern synthesis |
 | [Model architecture](model_architecture.md) | Anatomical encoders, shared electrode responses, and field decoding |
-| [Reproducibility](paper_reproduction.md) | Method-to-code mapping, evaluation scope, and timing definitions |
+| [Evaluation and reproducibility](paper_reproduction.md) | Dataset splits, FEM comparisons, and runtime measurements |
 | [Data contracts](data_contracts.md) | Machine-readable schemas and manifest validation |
 | [Code guide](code_guide.md) | Module responsibilities, tensor shapes, and execution flow |
 | [Examples](../../examples/README.md) | Synthetic inputs and installation checks |
@@ -33,7 +33,7 @@ the language switch at the top opens the same guide in the other language.
 | [Data use](../DATA_USE.md) | Dataset acknowledgements, methods citations, and distribution scope |
 | [Contributing](../CONTRIBUTING.md) | Development setup, compatibility, and focused verification |
 | [Release checklist](../RELEASE_CHECKLIST.md) | Repository upload inventory and distribution verification |
-| [Source provenance](../SOURCE_PROVENANCE.md) | Implementation origins and dependency boundaries |
+| [Implementation and dependencies](../SOURCE_PROVENANCE.md) | Package components and external integrations |
 | [Third-party notices](../THIRD_PARTY_NOTICES.md) | External software and bundled-weight notices |
 | [Changelog](../CHANGELOG.md) | Software changes and model-contract versioning |
 | [Citation guide](../CITATION_GUIDE.md) | Manuscript and software citation metadata |

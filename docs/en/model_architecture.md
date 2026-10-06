@@ -54,7 +54,7 @@ E(a -> c) = E(a -> b) + E(b -> c)
 These identities follow from the shared response bank, with floating-point
 roundoff in their numerical evaluation. There are no separate source/reference
 response networks or role embeddings. The exact settings are recorded in
-`configs/head2field_v1.json`. The architecture is described in Section 2.3.
+`configs/head2field_v1.json`.
 
 The inference session caches subject features and electrode-pair preparation so
 queries can be evaluated in bounded chunks. Chunking changes memory use but must

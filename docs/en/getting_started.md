@@ -76,7 +76,7 @@ head2field-predict \
 
 The command verifies the prepared inputs and bundled weights before prediction.
 It writes a `[75,Q,3]` float32 field basis, query coordinates, electrode pairs,
-and a explicit manifest. `Q` is the number of prepared GM/WM query rows.
+and an explicit manifest. `Q` is the number of prepared GM/WM query rows.
 Each source-to-Oz map represents source `+1 mA` and Oz `-1 mA`; components are
 world-RAS `[Ex,Ey,Ez]` in `V/m`.
 
@@ -157,4 +157,6 @@ preparation, training, and resume are described in [training](training.md).
 | GPU memory is insufficient | Reduce `--query-chunk-size` first, then `--electrode-batch-size`; pair/query ordering stays fixed. |
 | Custom weights fail strict validation | Use a bare FP32 v1 state dictionary with the expected keys and shapes; see the weight format below. |
 
-Runtime checks compare parameters, groups, relative paths, file sizes, coordinate order, shapes, dtypes and finite values directly. Resume compares the full configuration and dataset manifest. Regenerate statistics for the current 50/100 mm regions and training split.
+Pretrained checksums and custom-weight requirements are described in
+[weights](../../weights/README.md). The [code guide](code_guide.md) explains the
+implementation and tensor conventions.
