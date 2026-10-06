@@ -201,7 +201,7 @@ data and cohort splits are obtained separately.
 - [Inference and output format](docs/en/inference.md)
 - [Model architecture](docs/en/model_architecture.md)
 - [Evaluation and reproducibility](docs/en/paper_reproduction.md)
-- [Machine-readable data contracts](docs/en/data_contracts.md)
+- [Machine-readable data formats](docs/en/data_contracts.md)
 - [Code guide: modules, tensor shapes, and execution flow](docs/en/code_guide.md)
 - [Model card](docs/MODEL_CARD.md), [data use](docs/DATA_USE.md), and [weight format](weights/README.md)
 

@@ -39,7 +39,7 @@ CUDA 可用时选择 `--device cuda` 或 `--device cuda:0`。真实数据训练�
 
 ## 准备输入
 
-推理读取包含 `prepared_subject_v1.json` 及其引用文件的目录，需要解剖、电导率、GM/WM 查询行和标准 76 电极 cap。精确文件、坐标和组织标签见[输入合同](input_contract.md)。
+推理读取包含 `prepared_subject_v1.json` 的被试目录。该目录还应包含预处理影像、电导率、GM/WM 查询点和 76 个电极的位置。文件结构、坐标和组织标签要求见[输入格式说明](input_contract.md)。
 
 从原始 T1 图像开始：
 
@@ -135,7 +135,7 @@ head2field-train \
 | 无法找到 `head2field-predict` | 激活安装软件时使用的环境；`python -m head2field.cli --help` 使用同一预测解析器。 |
 | 缺少 `configs/training_smoke_v1.json` | 按上方示例复制内置配置，或在源码目录运行。 |
 | 输出目录已存在 | 选择新目录，命令会保留已有结果。 |
-| prepared subject 数组或坐标验证失败 | 核对输入清单与原始引用文件，参见输入合同。 |
+| prepared subject 数组或坐标验证失败 | 核对输入清单与原始引用文件，参见输入格式说明。 |
 | CUDA 不可用 | 检查活动环境的 PyTorch 构建与驱动；推理可选择 CPU。 |
 | GPU 显存不足 | 先减小 `--query-chunk-size`，再减小 `--electrode-batch-size`；电极对与查询顺序保持固定。 |
 | 自定义权重严格验证失败 | 使用参数名及形状正确的裸 FP32 v1 state dictionary，参见权重格式。 |

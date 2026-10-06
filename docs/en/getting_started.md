@@ -46,7 +46,7 @@ training uses CUDA FP16; the synthetic training check below uses CPU FP32.
 Inference consumes a directory containing `prepared_subject_v1.json` and its
 referenced files. It needs anatomy, conductivity, GM/WM query rows, and the
 standard 76-electrode cap. The exact files, coordinates, and tissue labels are
-listed in the [input contract](input_contract.md).
+listed in the [input format](input_contract.md).
 
 Starting with a raw T1 image:
 
@@ -76,7 +76,7 @@ head2field-predict \
 
 The command verifies the prepared inputs and bundled weights before prediction.
 It writes a `[75,Q,3]` float32 field basis, query coordinates, electrode pairs,
-and an explicit manifest. `Q` is the number of prepared GM/WM query rows.
+and a JSON manifest. `Q` is the number of prepared GM/WM query rows.
 Each source-to-Oz map represents source `+1 mA` and Oz `-1 mA`; components are
 world-RAS `[Ex,Ey,Ez]` in `V/m`.
 
@@ -103,7 +103,7 @@ For current combinations, chunking, and Python inference, see
 ## Configuration files after wheel installation
 
 Prediction selects its bundled weights and fixed v1 architecture automatically.
-Training and preflight accept an explicit `--config` path. A source checkout
+Training and preflight use the configuration file selected by `--config`. A source checkout
 already contains `configs/`. After installing only the wheel, copy the existing
 default configuration resources into your working directory:
 
@@ -152,7 +152,7 @@ preparation, training, and resume are described in [training](training.md).
 | `head2field-predict` is unavailable | Activate the environment used for installation. `python -m head2field.cli --help` runs the same prediction parser. |
 | `configs/training_smoke_v1.json` is missing | Copy the bundled configuration resources using the snippet above, or run from the source checkout. |
 | Output directory already exists | Choose a new destination; commands preserve prior results. |
-| Prepared-subject metadata or coordinate validation fails | Check the input manifest and its original referenced files; see the input contract. |
+| Prepared-subject metadata or coordinate validation fails | Check the input manifest and its original referenced files; see the input format. |
 | CUDA is unavailable | Check the PyTorch build and driver in the active environment; use CPU for inference. |
 | GPU memory is insufficient | Reduce `--query-chunk-size` first, then `--electrode-batch-size`; pair/query ordering stays fixed. |
 | Custom weights fail strict validation | Use a bare FP32 v1 state dictionary with the expected keys and shapes; see the weight format below. |

@@ -14,7 +14,7 @@ Use synthetic inputs when possible. Remove participant identifiers, credentials,
 and local storage paths from logs and attachments.
 
 For a feature request, describe the intended research workflow and how the
-proposed change interacts with the v1 input/output contract.
+proposed change interacts with the v1 input and output formats.
 
 ## Development setup
 
@@ -66,21 +66,22 @@ and data flow before changing model or training code.
 ## Prepare a contribution
 
 - Explain the observed behavior, intended behavior, and relevant verification.
-- Update documentation and examples when commands or contracts change.
+- Update documentation and examples when commands or input/output formats change.
 - Use relative paths and fictional identifiers in examples and tests.
 - Include regression tests for changes that affect numerical results, ordering,
   validation, or resume behavior. State optional tests that were skipped.
 - Preserve lazy optional imports so minimal inference does not load SimNIBS,
   SciPy, h5py, or the training pipeline.
 
-## Scientific compatibility
+<a id="scientific-compatibility"></a>
 
-The v1 contract fixes model parameter names and shapes, tissue semantics,
-conductivity scaling, world-RAS coordinates, source/query order, current
-convention, and output units. A change to these fields needs a documented
-compatibility assessment and same-input numerical comparison. Contract-breaking
-changes require an explicit model/schema version change rather than a silent
-patch to existing files.
+## Model compatibility
+
+The v1 model requires consistent parameter names and shapes, tissue labels,
+conductivity scaling, world-RAS coordinates, electrode/query order, current
+convention, and output units. When changing these, compare numerical results
+on the same inputs and explain compatibility with existing weights and data.
+Incompatible changes need a new model or data-format version and documentation.
 
 For optimization work, compare the same inputs and report runtime, memory use,
 and numerical differences. Synthetic unit tests establish software behavior;
@@ -115,7 +116,7 @@ Co-authored-by: Codex <codex@openai.com>
 
 Do not include participant data, cohort manifests, complete resume states, or
 generated research outputs in source changes. The bundled v1 weights and their
-checksums are package resources with a defined model contract. See
+checksums are package resources with documented architecture and input requirements. See
 [data use](DATA_USE.md) and [weight documentation](../weights/README.md).
 
 Document the origin and license of copied or adapted code. Add no templates,

@@ -10,9 +10,9 @@
 
 ## 使用条件
 
-推理需要通过验证的 prepared subject。安装包内置预训练 Head2Field v1 权重，默认自动选择。
+推理使用预处理后的被试数据，默认加载安装包内的 Head2Field v1 权重。
 
-最小安装使用 prepared subject、电导率、电极顺序及验证合同，不导入预处理、FEM 或训练流水线，也不导入 SimNIBS、SciPy 或 h5py。推理不需要 FEM 标签。
+基础安装即可运行推理，不需要 FEM 标签。运行时不会导入预处理、FEM 或训练模块，也不会加载 SimNIBS、SciPy 或 h5py。
 
 <a id="cli"></a>
 
@@ -50,7 +50,7 @@ head2field-predict \
 4. 按查询顺序分块计算，将全部 75 个电极对电场写入内存映射数组。
 5. 检查输入文件未发生变化，写入查询坐标、电极对记录和预测清单。
 
-分块大小用于控制资源，不改变科学配置。
+调整分块大小会影响内存使用，但不改变电极或查询点的顺序、坐标系和输出单位。
 
 <a id="output-tree"></a>
 
@@ -162,7 +162,7 @@ for chunk in session.iter_predictions(rows, electrodes, query_chunk_size=32768):
 
 `Head2FieldInferenceSession` 和权重加载工厂是稳定的顶层导出。prepared subject 构建与底层分块流程可通过相应实现模块调用。
 
-加载模型时将其放到 session 使用的设备。`row_indices` 和可选 `pair_indices` 均保留输入顺序。每块预测留在该设备上，直到转移到 CPU。随生成随处理或保存；累积 GPU 张量会保留显存。模型权重或被试数据变化后，应重新建立 session，因为缓存假定输入不可变。
+模型与推理会话应使用同一设备。`row_indices` 和可选 `pair_indices` 保持传入顺序。每块预测最初保存在推理设备上，需要 CPU 数组时再传输。建议边计算边处理或保存结果，避免长期保留 GPU 张量引用而占用显存。换用其他权重或被试数据时，请新建推理会话，避免复用旧缓存。
 
 <a id="weights-and-reproducibility"></a>
 

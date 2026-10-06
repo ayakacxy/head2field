@@ -6,7 +6,7 @@ Start with [`_spec.py`](../../src/head2field/_spec.py) for the fixed v1 factory,
 [`inputs.py`](../../src/head2field/inputs.py) for tensor construction, and
 [`inference.py`](../../src/head2field/inference.py) for the prediction flow. The
 assembled network is in [`model.py`](../../src/head2field/model.py). All four files
-work with the same explicit coordinate and electrode/query identities.
+use the same coordinate conventions, electrode order, and query-row indices.
 
 ## Package map
 
@@ -20,12 +20,12 @@ work with the same explicit coordinate and electrode/query identities.
 | `cli.py` | Prediction argument parsing, input verification, output arrays and manifest |
 | `preprocessing/` | T1 alignment, CHARM adapter, conductivity, cap, prepared-subject assembly |
 | `fem_labels/` | SimNIBS lead-field execution, HDF5 auditing, voxel-label export |
-| `training/` | Dataset and cache contracts, loss statistics, physics pools, training and resume |
+| `training/` | Dataset and cache formats, loss statistics, physics pools, training and resume |
 | `resource_paths.py` | Allowlisted configuration, schema, documentation, and weight resources |
 
 The top-level package exports `Head2FieldV1`, `create_head2field_v1`,
 `load_head2field_v1_weights`, and `Head2FieldInferenceSession`. Preprocessing,
-FEM, and training execution are reached through their explicit submodules;
+FEM, and training execution are reached through their own submodules;
 optional solver and scientific I/O dependencies are loaded where needed.
 
 ## Prediction flow
@@ -51,7 +51,7 @@ query contexts. A new query chunk reuses the head and electrode encodings.
 Each pair batch remaps its source/reference indices to a compact electrode
 bank before decoding. Repeated references share a token and response inside
 that batch. First-occurrence bank order and requested pair order are retained.
-This bounds decoder memory without changing the identity of an output field.
+This reduces decoder memory use while preserving the requested pair order.
 
 Create a new session when changing the subject or model weights. Cached tensors
 are computed values and are not refreshed by mutating the original inputs.
@@ -66,8 +66,8 @@ and `P=75`; lower-level bundles also support selected or repeated pairs.
 | --- | --- | --- |
 | Canonical tissue/T1/conductivity arrays | `[256,256,256]` | Original 1 mm i/j/k grid |
 | Encoder head input | `[B,12,128,128,128]` | Ten tissue channels, normalized conductivity, normalized T1 |
-| Query identity | `[B,Q]` | Exact row indices in `gmwm_ijk` |
-| Query coordinates | `[B,Q,3]` | Explicit voxel i/j/k, normalized i/j/k, and world-RAS mm fields |
+| Query row indices | `[B,Q]` | Exact row indices in `gmwm_ijk` |
+| Query coordinates | `[B,Q,3]` | Voxel i/j/k, normalized i/j/k, and world-RAS mm fields |
 | Native query features | `[B,Q,12]` | Tissue, conductivity, and T1 features from the 1 mm grid |
 | Unique electrode coordinates | `[B,U,3]` | Normalized i/j/k and world-RAS mm |
 | Pair indices | `[B,P,2]` | Source and reference positions in the unique electrode bank |
@@ -90,34 +90,35 @@ augmentation selected for the current data or physics branch.
 Within `model.py`, follow these stages:
 
 1. `SubjectGeometry`, `QueryCoordinateBundle`, and `ElectrodeCoordinateBundle`
-   define and validate identities and coordinate transforms.
+   store electrode/query indices and validate coordinate transforms.
 2. `AnatomyPyramidEncoder` and `CoarseGlobalAnatomyMixer` produce anatomical
    features. `Head2FieldV1.encode_head()` builds the four-level FPN.
 3. `build_global_context()`, `encode_queries()`, and
    `encode_unique_electrodes()` form subject, query, and electrode tokens.
 4. `decode_response_bank()` applies electrode-conditioned decoding once per
    unique electrode. `gather_pair_field()` performs source-minus-reference
-   subtraction using explicit pair indices.
+   subtraction using the supplied pair indices.
 5. `forward_bundled()` evaluates one branch.
    `forward_data_and_physics()` shares the head encoding across two branches.
 
-The shared bank gives antisymmetry and additive pair identities through the
-same subtraction rule. Individual `G` values have an unidentifiable additive
-gauge. Supervised targets and physical operators apply to bipolar pair fields.
-The fixed architecture settings are detailed in [model architecture](model_architecture.md).
+Shared-response subtraction gives antisymmetric and additive pair fields.
+At any query point, adding the same vector to every electrode response leaves
+the differences unchanged. Supervision and physical losses therefore act on
+pair fields. Architecture settings are listed in
+[model architecture](model_architecture.md).
 
 ## Reading the training path
 
 [`training/cli.py`](../../src/head2field/training/cli.py) validates the execution
-profile and constructs the dataset, complete-epoch sampler, run contract,
+profile and constructs the dataset, complete-epoch sampler, training run settings,
 step function, and runner. The responsibilities are:
 
 | File | Responsibility |
 | --- | --- |
-| `contracts.py` | Validate training configuration and record the complete run contract |
-| `dataset.py` | Verify dataset assets and build supervised/physics tensor bundles |
+| `contracts.py` | Validate training configuration and record the complete training run settings |
+| `dataset.py` | Verify dataset files and build supervised/physics tensor bundles |
 | `cache.py` | Prepare query-major targets and full-field energy statistics |
-| `physics_data.py` | Prepare primitive pools and training-only FEM calibration |
+| `physics_data.py` | Prepare integration sample sets and training-only FEM calibration |
 | `losses.py` | Global, radial, and high-field stable-energy supervision |
 | `physics.py` | Integral operators and calibrated one-sided excess losses |
 | `steps.py` | Share model encoding, combine data/physics losses, apply the curriculum |
@@ -126,8 +127,8 @@ step function, and runner. The responsibilities are:
 | `state.py` | Complete local resume state and independent RNG streams |
 
 The data branch uses named augmentation and dropout generators. The physics
-branch uses identity augmentation and consumes no data RNG. Operator validity
-masks and calibration remain fixed from prepared FEM assets. Global, radial,
+branch uses unaugmented coordinates and does not use the data RNG. Operator validity
+masks and calibration remain fixed from prepared FEM data. Global, radial,
 and high-field loss denominators describe the complete subject fields; query
 chunks only contribute their error numerators. Huber, MAE, and relative L2 in
 the supervised-loss metrics are diagnostics.
@@ -137,7 +138,7 @@ See [training](training.md) for runnable commands and checkpoint contents.
 ## Editing and verification
 
 Keep parameter names/shapes, input transforms, source/query order, coordinate
-frames, units, and scientific defaults explicit. Model factory changes affect
+frames, units, and default parameters consistent. Model factory changes affect
 the pretrained-weight schema; a model version change needs its corresponding
 factory, configuration, and loader. Package and data-schema versions are
 tracked independently.

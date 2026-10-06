@@ -1,26 +1,34 @@
-# Data contracts
+<a id="data-contracts"></a>
+
+# Data formats and validation
 
 [English](data_contracts.md) · [简体中文](../zh/data_contracts.md)
 
-JSON schemas describe manifest fields. Runtime validators directly check the
-arrays, coordinates, conductivity, source order, finite values, and units.
+JSON schemas define the required manifest fields. File loading also checks array
+shapes, coordinates, conductivity, electrode order, and units, and rejects
+numerical arrays containing NaN or Inf.
 
-| Contract | Consumer |
+| Format | Purpose |
 | --- | --- |
-| `prepared_subject_v1` | Preprocessing, inference, FEM and training |
-| `fem_labels_v1` | Complete 75-source FEM export and training |
-| `training_loss_statistics_v2` | 50/100 mm regional energy supervision |
-| `training_dataset_v1` | Group-disjoint training and local resume |
+| `prepared_subject_v1` | Prepared inputs for inference, FEM, and training |
+| `fem_labels_v1` | FEM labels for all 75 sources, used in training |
+| `training_loss_statistics_v2` | Energy statistics for the 50/100 mm regions |
+| `training_dataset_v1` | Training file paths and train/validation/test groups |
 
-See [schemas](../../schemas/) and the [input contract](input_contract.md).
-Required input files and FEM/training assets use relative paths. Loaders reject
-unsafe paths, missing files, inconsistent byte sizes, shapes, and scientific
-parameters. Query identity is the exact ordered `gmwm_ijk` array; source identity
-is the ordered list excluding Oz. New FEM exports store `query_ijk.npy` and
-compare it directly with prepared queries. Energy-statistics NPZ files store
-the query, affine, and electrode coordinates and compare them directly.
+See [schemas](../../schemas/) for field definitions and
+[input format](input_contract.md) for the directory layout. Paths are relative
+to their manifests; loading checks path safety, file existence, and file sizes.
 
-The conductivity table is checked by its complete values and units. FEM checks
-also include current, vector components, HDF5 metadata, and solver conductivity
-readback. Training resume compares the saved full configuration and dataset
-group/path records. Optional digest fields in older manifests are ignored.
+Predictions, FEM labels, and training statistics must use the same query points
+and source order:
+
+- Query rows follow `gmwm_ijk`; sources follow the electrode list with Oz removed.
+- FEM export saves `query_ijk.npy` and compares it with the prepared query rows.
+- Energy-statistics NPZ files store query rows, the affine, and electrode
+  coordinates, which are compared with the inputs when loaded.
+
+Checks cover every conductivity-table value and its units. FEM validation also
+checks current, vector components, HDF5 metadata, and conductivity read back from
+the solver. Training resume requires the saved configuration, groups, and data
+paths to match. Optional digest fields in older manifests are not used for
+validation.

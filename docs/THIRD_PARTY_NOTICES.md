@@ -1,4 +1,6 @@
-# Third-party notices and dependency boundary
+<a id="third-party-notices-and-dependency-boundary"></a>
+
+# Third-party software and licenses
 
 [English](THIRD_PARTY_NOTICES.md) · [简体中文](THIRD_PARTY_NOTICES_zh.md)
 
@@ -11,7 +13,7 @@ templates, atlases, or SimNIBS source/binaries.
 
 ## Runtime and optional dependencies
 
-| Component | Project role | Upstream license boundary |
+| Component | Project role | Upstream license and redistribution notes |
 | --- | --- | --- |
 | PyTorch | tensor runtime, model execution, and training | The top-level upstream license is BSD-3-Clause, while the repository and binary distributions contain or bundle components covered by additional notices and licenses. The exact installed artifact's `LICENSE`/`NOTICE` files are authoritative for redistribution. |
 | NumPy | array processing and file formats | NumPy's top-level license is BSD-3-Clause, but its source and binary artifacts can contain bundled or generated components under additional terms. Retain and review the exact artifact's license inventory. |
@@ -32,7 +34,7 @@ preparing a release.
 - The wheel contains Python code, resources, and the allowlisted pretrained v1
   `.pth` file with its checksum. Other checkpoints, training states, NIfTI,
   meshes, HDF5, NPY/NPZ, native libraries, and third-party datasets are excluded.
-- The source archive follows the same data and weight boundaries.
+- The source archive includes the same project materials and pretrained weights.
 - Bundled weights are a bare state dictionary with no optimizer, scheduler,
   participant identifier, or training-resume state.
 - Containers, Conda environments, wheelhouses, and standalone binaries have

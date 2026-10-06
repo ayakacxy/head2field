@@ -31,7 +31,7 @@ resume only. Each new training output needs its own evaluation.
 
 Track the software version, model architecture, and weight checksum separately.
 Changing a training configuration affects new training runs; existing pretrained
-tensors retain their own identity. Keep the model version, architecture, license,
+weight files are unchanged. Keep the model version, architecture, license,
 and [data-use notice](../docs/DATA_USE.md) with distributed weights. See
 [inference](../docs/en/inference.md) for the prediction API and
 [evaluation](../docs/en/paper_reproduction.md) for comparison and timing guidance.

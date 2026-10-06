@@ -29,7 +29,7 @@ The same workflow is available as
 
 ## Stage 1: canonical T1
 
-Two explicit profiles are supported:
+Choose one of two processing profiles:
 
 - `hcp_acpc` assumes ACPC alignment and distortion correction are already
   complete. It estimates no rotation and only centers/resamples the head onto
@@ -53,8 +53,9 @@ The default adapter imports SimNIBS 4.6.0 from the user's environment and calls
 an error; there is no fallback segmentation. CHARM uses resources from that
 external installation. No runtime or atlas is copied into this package.
 
-The head model is generated in sibling staging and promoted only after
-all of the following identity inputs exist:
+CHARM first writes the head model to a temporary sibling directory. The result
+is saved to the destination after the following files and version information
+have been checked:
 
 - the caller's canonical T1 outside the head-model directory;
 - CHARM's own `T1.nii.gz` and `final_tissues.nii.gz` inside that directory;
@@ -65,20 +66,21 @@ The `charm_runtime_v1.json` manifest records the T1, tissues, unique head mesh,
 and SimNIBS version for this run. Assembly and FEM commands use this record to
 check that their inputs come from the same head model.
 
-The resulting head-model directory is a durable external runtime output,
-separate from the compact prepared-subject directory.
+The head-model directory keeps the full CHARM output. Inference inputs are
+stored in a separate prepared-subject directory.
 
 ## Stage 3: prepared-subject assembly
 
-Assembly accepts the canonical T1, `final_tissues.nii.gz`, and the current CHARM
-head-model directory. It first validates `charm_runtime_v1.json` and requires
-the supplied T1 and tissues to match that exact CHARM runtime identity. By
-default it then reads
-`eeg_positions/EEG10-10_UI_Jurak_2007.csv`, requires exactly the fixed 76-name
-set, and reorders its finite world-RAS coordinates to the fixed list with Oz
-first. Callers therefore do not have to pre-create name or coordinate files.
-The paired `--electrode-names-json` and `--electrode-coords-mm-npy` options are
-retained only as an explicit, equally strict adapter override. Assembly then:
+This stage uses the prepared T1, `final_tissues.nii.gz`, and CHARM head-model
+directory. It checks `charm_runtime_v1.json` to confirm that the input files
+belong to the same head-model run.
+
+Electrode positions are read from `eeg_positions/EEG10-10_UI_Jurak_2007.csv` by
+default. The file must contain the standard 76 electrode names and world-RAS
+coordinates without NaN or Inf. Output follows the fixed order with Oz first.
+Separate name and coordinate files are usually unnecessary. To supply your own,
+pass both `--electrode-names-json` and `--electrode-coords-mm-npy`; the same
+name and coordinate checks apply. Assembly then:
 
 1. Validates canonical volume geometry and tissue values.
 2. Copies the prepared T1 and tissues and creates float32 scalar conductivity.
@@ -103,10 +105,9 @@ It writes a deterministic 32-cube ellipsoid T1, a second orientation image, and
 synthetic spherical coordinates for the fixed 76 names. These are non-anatomical
 inputs and are not evidence that CHARM or FEM output is scientifically valid.
 
-## Validation boundary
+## Testing
 
-Synthetic tests cover profile routing, one-call 6-DOF behavior, C-order query
-assembly, source immutability, strict runtime-manifest fields, cross-manifest
-identity binding, and failure/no-overwrite transactions. Real
-SimNIBS/CHARM execution remains an external-runtime integration check and must
-be recorded with the exact installed version for a release validation run.
+Synthetic tests check profile selection, rigid-alignment calls, query order,
+input preservation, and agreement between manifests and files. They also check
+that failures retain existing results and that outputs are not overwritten.
+Actual CHARM segmentation needs a separate run with its SimNIBS version recorded.

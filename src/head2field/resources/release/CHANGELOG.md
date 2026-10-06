@@ -2,7 +2,7 @@
 
 [English](CHANGELOG.md) · [简体中文](CHANGELOG_zh.md)
 
-Software versions and the Head2Field v1 model contract are tracked independently.
+Software and model versions are tracked separately.
 
 ## Unreleased
 
@@ -36,9 +36,9 @@ Software versions and the Head2Field v1 model contract are tracked independently
 - Oz-referenced SimNIBS lead-field generation, solver-output validation, and
   ordered FEM label export.
 - Chunked lead-field inference, subject-feature caching, current-pattern
-  synthesis, and explicit output manifests.
+  synthesis, and output manifests.
 - Dataset, cache, statistics, and physics-pool preparation with validated
-  coordinate, source-order, and unit contracts.
+  coordinate, source-order, and unit checks.
 
 ### Training
 

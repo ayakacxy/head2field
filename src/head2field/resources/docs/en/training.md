@@ -2,12 +2,10 @@
 
 [English](training.md) · [简体中文](../zh/training.md)
 
-The training profile provides the data-loss and all-physics GP method used by
-Head2Field v1, a generic explicit dataset contract, preparation
-commands, CUDA FP16 epoch training, deterministic validation, and complete local
-resume state. It does not include research data, cohort membership, prepared
-subjects, FEM labels, caches, fitted statistics, physics pools, training logs,
-or training-resume checkpoints.
+This guide covers data preparation, CUDA FP16 training, validation, and local
+resume. Training combines data and physics losses. Users prepare the images,
+prepared subjects, FEM labels, caches, statistics, and physics samples; logs and
+resume files are saved locally.
 
 ## Execution profiles
 
@@ -86,7 +84,7 @@ for dataset splits, complete-field metrics, and runtime measurements.
 The machine schema is
 [`training_dataset_v1.schema.json`](../../schemas/training_dataset_v1.schema.json).
 Every path is relative to the dataset manifest, and every referenced manifest
-has an explicit relative path. Each anonymous `subject_key` references:
+is listed by its relative path. Each anonymous `subject_key` references:
 
 1. `prepared_subject_v1.json`;
 2. `fem_labels_v1.json`;
@@ -100,10 +98,10 @@ manifest/file sizes. Groups, rather than individual rows, own the `train`,
 `validation`, or optional `test` partition. A group cannot occur in more than
 one partition, and both train and validation are mandatory.
 
-Changing the canonical training config, group split, any referenced asset path,
-or source order changes the run contract. Such a state cannot be resumed.
+Resume requires the configuration, data groups, file paths, and source order
+to match the previous run. Start a new run when changing these settings.
 
-## Asset preparation
+## Training data preparation
 
 All destinations below must not exist. Commands use staging directories and
 refuse to overwrite prior outputs.
@@ -151,7 +149,7 @@ head2field-prepare-physics finalize \
   --output-dir derived/subject-a/physics-pool-v1
 ```
 
-`fit` stores the paths, source lists and array sizes of its explicitly supplied training raw pools. A
+`fit` stores the paths, source lists and array sizes of the training raw pools supplied to it. A
 validation raw pool must never be passed to that command.
 
 ## Synthetic installation and resume smoke
@@ -176,7 +174,7 @@ head2field-train \
 
 This runs up to two CPU FP32 epochs through the model forward, stable-energy
 loss, four physical operators, train-only state machine, and deterministic
-validation. The small model is explicitly test-only and cannot accept official
+validation. The small model is for testing only and cannot accept official
 N128 initialization weights.
 
 ## Real-data training
@@ -216,7 +214,7 @@ head2field-train \
 The complete local state contains model, AdamW, cosine scheduler, AMP scaler,
 global step, Python RNG, NumPy RNG, Torch CPU/CUDA RNGs, named
 augmentation/dropout generators, sampler permutations/cursors, best validation
-loss and model, early-stopping counter, the exact run contract, and all prior
+loss and model, early-stopping counter, the exact training run settings, and all prior
 log rows. State files are written to a same-directory temporary file, flushed, and atomically
 promoted without overwriting an existing file. They are local artifacts and
 must never be placed in `src/head2field/resources/weights/`.

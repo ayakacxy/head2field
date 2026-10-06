@@ -8,7 +8,7 @@
 
 ## 概览
 
-Head2Field v1 结合解剖编码、查询特征和电极几何，预测 75 个 source→Oz 先导场。固定工厂及严格权重 schema 保证训练与推理使用一致结构。模型合同如下；用途与局限见[模型说明](../MODEL_CARD_zh.md)。[代码阅读指南](code_guide.md)给出各阶段的实现位置和网络张量维度。
+Head2Field v1 结合解剖编码、查询特征和电极几何，预测 75 个 source→Oz 先导场。训练与推理使用同一套 v1 结构，加载权重时检查参数名和形状。以下介绍网络的组成；用途与局限见[模型说明](../MODEL_CARD_zh.md)，源码和张量维度见[代码阅读指南](code_guide.md)。
 
 <a id="input-streams"></a>
 
@@ -20,7 +20,7 @@ Head2Field v1 结合解剖编码、查询特征和电极几何，预测 75 个 s
 2. GM/WM 体素的查询坐标与局部特征。
 3. 有序的源电极和参考电极坐标，单位为 world-RAS 毫米。
 
-构建张量前由 prepared subject 加载器验证来源数据。坐标转换显式执行，不将数组索引视为世界坐标。
+构建张量前，程序先检查输入文件。体素索引和世界坐标使用不同的坐标表示，转换时根据 affine 计算。
 
 <a id="network-outline"></a>
 
@@ -44,9 +44,9 @@ E(a -> c) = E(a -> b) + E(b -> c)
 
 <a id="fixed-v1-factory"></a>
 
-## 固定 v1 工厂
+## 创建 v1 模型
 
-`create_head2field_v1()` 是唯一官方 v1 工厂，精确构造参数同步在 [`../configs/head2field_v1.json`](../../configs/head2field_v1.json)。权重加载器还检查：
+`create_head2field_v1()` 创建与内置权重匹配的 v1 模型，结构参数见 [`../configs/head2field_v1.json`](../../configs/head2field_v1.json)。权重加载器还检查：
 
 - 非空 `str -> Tensor` 映射，无 wrapper 元数据；
 - 精确包含 208 个张量和 2,607,870 个标量；
@@ -54,7 +54,7 @@ E(a -> c) = E(a -> b) + E(b -> c)
 - 参数名和张量形状完全匹配；
 - 严格加载，不含缺失或额外参数。
 
-修改工厂字段、参数名、坐标约定或模型输入变换会产生不同模型合同，需要单独审查相应版本。
+修改模型结构、参数名、坐标约定或输入处理方式时，需要使用新的模型版本，并准备与其匹配的权重。
 
 <a id="stable-top-level-api"></a>
 
@@ -67,12 +67,12 @@ E(a -> c) = E(a -> b) + E(b -> c)
 - `Head2FieldInferenceSession`；
 - `load_head2field_v1_weights`。
 
-预处理、FEM 与训练通过显式子模块和 CLI 流程访问，不为顶层 API 增加重型可选依赖导入。
+预处理、FEM 和训练通过各自的子模块或命令调用，只有使用这些功能时才加载相关可选依赖。
 
 <a id="model-versions"></a>
 
 ## 模型版本
 
-模型版本采用显式命名：当前模型由 `Head2FieldV1`、`create_head2field_v1()`、`load_head2field_v1_weights()`、`configs/head2field_v1.json` 和 `head2field_v1_weights.pth` 描述。未来版本沿用同样命名规则，拥有各自的结构配置和权重加载器。
+当前模型的名称包括 `Head2FieldV1`、`create_head2field_v1()`、`load_head2field_v1_weights()`、`configs/head2field_v1.json` 和 `head2field_v1_weights.pth`。未来版本沿用同样命名规则，拥有各自的结构配置和权重加载器。
 
 软件包版本（`0.1.0`）和数据 schema 版本独立于模型版本。例如，`v2` 训练统计 schema 仍可描述用于训练 Head2Field v1 的数据。

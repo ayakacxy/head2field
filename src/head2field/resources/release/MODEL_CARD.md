@@ -22,13 +22,15 @@ array with world-RAS components `[Ex, Ey, Ez]`, in `V/m` for `+1 mA` at each
 source and `-1 mA` at Oz. Inference requires prepared inputs and compatible
 weights; FEM labels are needed for supervised training, not prediction.
 
-## Versioning and input contract
+<a id="versioning-and-input-contract"></a>
 
-The model-contract version is `v1`; the software package version is recorded in
+## Model version and input requirements
+
+The model version is `v1`; the software package version is recorded in
 `pyproject.toml` and `CITATION.cff`. A software patch does not by itself create a
-new trained model or change the input/output contract.
+new trained model or change the input and output formats.
 
-The v1 contract fixes:
+Head2Field v1 uses the following inputs and outputs:
 
 - T1 as the only raw imaging modality;
 - a canonical `256 x 256 x 256`, 1 mm RAS prepared-input grid;
@@ -38,13 +40,13 @@ The v1 contract fixes:
   float32 as `sigma_s_per_m / 1.654`, and normalized T1 intensity;
 - the fixed v1 model factory, using a 128-cube encoder input;
 - 76 ordered cap electrodes, with Oz as reference and 75 ordered sources;
-- exact GM/WM query ordering and explicit voxel/world-coordinate conversion;
+- GM/WM query order matching the inputs and affine-based voxel/world-coordinate conversion;
 - the current convention and output units stated above; and
 - strict FP32 weight loading with fixed parameter keys and tensor shapes.
 
-See [input contracts](en/input_contract.md),
+See [input requirements](en/input_contract.md),
 [architecture](en/model_architecture.md), and
-[data contracts](en/data_contracts.md) for the machine-readable details.
+[data formats](en/data_contracts.md) for the machine-readable details.
 
 ## Training
 
@@ -60,13 +62,13 @@ and `a(t)=1`. Five consecutive non-improving validation epochs stop training;
 the best validation checkpoint is selected for test evaluation.
 
 The data objective uses 50/100 mm radial regions and fixed per-step scaling
-`M / (75 * N_train)`. Its statistics contract is `training_loss_statistics_v2`.
+`M / (75 * N_train)`. Its statistics format is `training_loss_statistics_v2`.
 
 The objective combines stable-energy data loss with circulation, WM/GM
 normal-current continuity, tangential-field continuity, and flux terms. Physics
 thresholds are fitted on training data. Group-disjoint train/validation/test
-partitions and asset paths are part of the run contract. See
-[training](en/training.md) for loss settings, asset preparation, and resume.
+partitions and data paths are part of the training run settings. See
+[training](en/training.md) for loss settings, data preparation, and resume.
 
 <a id="verified-weight-format"></a>
 
@@ -91,7 +93,7 @@ source distribution and selected by default; see
 
 The model supports non-clinical research, software validation, method
 comparison, and reproducible TES field-modeling experiments on inputs that meet
-the v1 contract. Users should understand neuroimaging spatial metadata,
+the v1 input requirements. Users should understand neuroimaging spatial metadata,
 electrode/current conventions, and numerical validation of learned surrogates.
 
 The package predicts a lead-field basis. It does not perform stimulation-current
@@ -101,8 +103,8 @@ optimization, treatment planning, or uncertainty quantification.
 
 - Invalid tissue labels, conductivities, affines, electrode order, query order,
   or units can invalidate predictions even when tensor shapes are correct.
-- The model uses fixed isotropic scalar conductivities. Anisotropy or changed
-  model/input semantics requires a different model contract.
+- The model uses fixed isotropic scalar conductivities. Using anisotropic conductivity or
+  changing input channels or tissue labels requires a new compatible model and weights.
 - Training data do not establish performance for every scanner, imaging
   protocol, age group, pathology, lesion, implant, or unusual anatomy.
 - Outputs have no calibrated uncertainty estimate.
@@ -115,19 +117,19 @@ on accuracy outside the established evaluation conditions.
 ## Reproducibility and evaluation
 
 The repository includes synthetic tests for weight/schema loading, coordinate
-and source/query contracts, preprocessing/FEM adapters, full epoch coverage,
+and source and query ordering, preprocessing/FEM adapters, full epoch coverage,
 learning-rate scheduling, validation, early stopping, and local resume.
 CUDA FP16 operation has also been exercised on synthetic inputs.
 
 These checks establish software behavior and compatibility. They do not measure
 cohort accuracy, generalization, clinical validity, or end-to-end equivalence to
 FEM. Reproducing a scientific result requires the corresponding data split,
-input preparation, model asset, evaluation protocol, and lawful data access.
+input preparation, model weights, evaluation protocol, and lawful data access.
 
 ## Data and acknowledgements
 
 Participant-level data and training-resume states are excluded from source and
 Python distributions. Model development benefited from WU-Minn HCP data; the
 [data-use document](DATA_USE.md) provides upstream terms and acknowledgement
-references. The source-code license, dataset terms, and any weight-asset notice
+references. The source-code license, dataset terms, and any weight notice
 apply to their respective materials.

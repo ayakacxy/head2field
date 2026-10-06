@@ -1,10 +1,10 @@
 <a id="deterministic-synthetic-examples"></a>
 
-# 确定性合成示例
+# 合成数据示例
 
 [English](README.md) · [简体中文](README_zh.md)
 
-这些生成器创建小型非解剖输入，不包含真实参与者图像、标识、坐标、标签或衍生数据。生成文件应写入被版本控制忽略的新目录；本地开发可使用 `.work/` 下的任务目录。
+这些生成器按固定规则生成小型测试数据，不包含真实参与者图像、标识、坐标、标签或衍生数据。生成文件应写入被版本控制忽略的新目录；本地开发可使用 `.work/` 下的任务目录。
 
 <a id="preprocessing-branch-inputs"></a>
 
@@ -21,7 +21,7 @@ python -m head2field.preprocessing canonicalize \
   --output-dir generated/synthetic-canonical
 ```
 
-生成器还为 adapter 测试写入严格的 76 电极名称 cap override，坐标位于合成球面上。不要将这些文件运行 CHARM/FEM 后的结果解释为真实解剖或科学验证。
+生成器还为 adapter 测试写入严格的 76 电极名称 cap override，坐标位于合成球面上。这些电极位置不代表真实头部，不能用来验证 CHARM 分割或 FEM 计算的精度。
 
 <a id="training-installation-and-resume-smoke"></a>
 

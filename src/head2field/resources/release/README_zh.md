@@ -22,8 +22,8 @@
 
 </div>
 
-Head2Field 根据 T1 提取的头部解剖、组织电导率和电极坐标预测可复用的多电极电场基底。
-共享电极响应可用于不同电流模式的电场合成，无需为每种刺激组合重新训练。
+Head2Field 利用 T1 MRI、组织电导率和电极坐标预测多电极先导场。
+预测得到的电场基底可以按电流系数组合，计算不同刺激方案的电场，无需重新训练模型。
 
 ## 📚 目录
 
@@ -55,8 +55,8 @@ Oz `-1 mA`。本项目用于非临床科研；适用条件与限制见[模型说
 
 | 工作流程 | 功能 | 依赖 |
 | --- | --- | --- |
-| 推理 | prepared subject 和模型权重生成 75 个先导场，无需 FEM 标签 | 基础安装 |
-| 预处理 | T1 canonicalization、外部 CHARM 头模型、组织电导率、GM/WM 查询和标准电极 cap | `preprocess` extra 和 SimNIBS 4.6.0 |
+| 推理 | 从预处理数据和模型权重计算 75 个先导场，无需 FEM 标签 | 基础安装 |
+| 预处理 | T1 对齐与重采样、CHARM 头模型、组织电导率、GM/WM 查询和标准电极布局 | `preprocess` extra 和 SimNIBS 4.6.0 |
 | FEM 标签 | Oz 参考先导场生成、HDF5 验证和体素标签导出 | `fem` extra 和 SimNIBS 4.6.0 |
 | 训练 | 数据与物理损失、完整 epoch、验证、早停和本地恢复 | `training` extra 和 CUDA 版 PyTorch |
 
@@ -105,7 +105,7 @@ python -m pip install '.[full]'
 
 ### 预测先导场
 
-准备符合[输入合同](docs/zh/input_contract.md)的 prepared subject。
+先准备预处理后的被试数据，所需文件和坐标要求见[输入格式说明](docs/zh/input_contract.md)。
 命令会自动加载[内置的预训练 v1 模型权重](weights/README_zh.md)，无需单独下载权重。
 
 ```bash
@@ -159,7 +159,7 @@ head2field-train \
   --output-dir generated/synthetic-run
 ```
 
-这些非解剖的解析合成输入用于验证软件流程，不用于衡量预测精度。
+这些示例使用生成的小型数组检查软件是否正常运行，不能用来评估真实数据的预测精度。
 更多示例见[examples](examples/README_zh.md)。
 
 <a id="reproduction"></a>
@@ -171,7 +171,7 @@ head2field-train \
 source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 轮，采用 25 轮余弦调度，
 每轮结束验证；连续五轮验证损失未降低时早停，测试使用验证最优模型。
 
-真实数据训练需要 prepared subjects、FEM 标签和 CUDA 版 PyTorch。数据准备、训练配置、
+真实数据训练需要 预处理数据、FEM 标签和 CUDA 版 PyTorch。数据准备、训练配置、
 验证与 checkpoint 恢复见[训练说明](docs/zh/training.md)。
 
 数据划分、完整电场评估指标和运行时间测量见
@@ -191,7 +191,7 @@ source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 �
 - [推理与输出格式](docs/zh/inference.md)
 - [模型结构](docs/zh/model_architecture.md)
 - [评估与可重复实验](docs/zh/paper_reproduction.md)
-- [机器可读数据合同](docs/zh/data_contracts.md)
+- [数据格式与检查](docs/zh/data_contracts.md)
 - [模型说明](docs/MODEL_CARD_zh.md)、[数据使用](docs/DATA_USE_zh.md)和[权重格式](weights/README_zh.md)
 
 <a id="contributing"></a>
@@ -230,5 +230,5 @@ source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 �
 软件、相关方法与数据来源的引用要求见[引用指南](docs/CITATION_GUIDE_zh.md)。
 
 模型开发受益于 WU-Minn Human Connectome Project 数据，[数据使用说明](docs/DATA_USE_zh.md)
-提供 HCP 致谢和方法引用要求的官方链接。源码与 Python 分发包不包含参与者影像、mesh、
-FEM 输出、cohort manifest 或训练恢复状态。
+提供 HCP 致谢和方法引用要求的官方链接。源码与 Python 安装包不包含参与者影像、网格、
+FEM 输出、被试分组清单或训练恢复文件。

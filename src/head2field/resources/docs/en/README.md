@@ -12,14 +12,14 @@ the language switch at the top opens the same guide in the other language.
 | Guide | Contents |
 | --- | --- |
 | [Getting started](getting_started.md) | Wheel installation, CUDA checks, prediction, and bundled defaults |
-| [Input contract](input_contract.md) | Required files, tissue semantics, coordinates, and units |
+| [Input format](input_contract.md) | Required files, tissue-label meanings, coordinates, and units |
 | [Preprocessing](preprocessing.md) | Raw T1 and HCP profiles, CHARM, conductivity, and query preparation |
 | [FEM labels](fem_label_generation.md) | Oz-referenced simulations, validation, and label export |
-| [Training](training.md) | Cache and statistics preparation, physics assets, validation, and resume |
+| [Training](training.md) | Cache and statistics preparation, physics calibration data, validation, and resume |
 | [Inference](inference.md) | Chunking, Python APIs, output files, and current-pattern synthesis |
 | [Model architecture](model_architecture.md) | Anatomical encoders, shared electrode responses, and field decoding |
 | [Evaluation and reproducibility](paper_reproduction.md) | Dataset splits, FEM comparisons, and runtime measurements |
-| [Data contracts](data_contracts.md) | Machine-readable schemas and manifest validation |
+| [Data formats and validation](data_contracts.md) | Machine-readable schemas and manifest validation |
 | [Code guide](code_guide.md) | Module responsibilities, tensor shapes, and execution flow |
 | [Examples](../../examples/README.md) | Synthetic inputs and installation checks |
 | [Weights](../../weights/README.md) | Bundled model, tensor format, and custom-weight loading |
@@ -35,6 +35,6 @@ the language switch at the top opens the same guide in the other language.
 | [Release checklist](../RELEASE_CHECKLIST.md) | Repository upload inventory and distribution verification |
 | [Implementation and dependencies](../SOURCE_PROVENANCE.md) | Package components and external integrations |
 | [Third-party notices](../THIRD_PARTY_NOTICES.md) | External software and bundled-weight notices |
-| [Changelog](../CHANGELOG.md) | Software changes and model-contract versioning |
+| [Changelog](../CHANGELOG.md) | Software changes and model versioning |
 | [Citation guide](../CITATION_GUIDE.md) | Manuscript and software citation metadata |
 | [License guide](../LICENSE_GUIDE.md) | Source license and related distribution notices |

@@ -18,9 +18,9 @@ head2field-fem validate   --prepared-subject-dir prepared_subject   --fem-labels
 转换为源 +1 mA/Oz −1 mA 的 float32 world-RAS 向量，单位 V/m。
 
 运行保留日志、HDF5 和 runtime MAT，并将设置的电导率与 MAT 回读值直接比较。标签记录源
-顺序、相对路径、大小、`[Q,3]`、float32 和有限值。新导出保存 `query_ijk.npy`，与 prepared
+顺序、相对路径、大小、`[Q,3]`、float32，并检查 NaN 或 Inf。新导出保存 `query_ijk.npy`，与 prepared
 subject 的有序坐标逐项比较。
 
 验证核对电流、参考、场类型、单位、组织、源顺序、坐标、电导率、数值数组与安全路径，采用
 统一验证模式。旧清单可选摘要字段不参与通过条件。输出由同级 staging 原子发布，不覆盖
-已有结果。见[数据合同](data_contracts.md)和 [FEM schema](../../schemas/fem_labels_v1.schema.json)。
+已有结果。见[数据格式与检查](data_contracts.md)和 [FEM schema](../../schemas/fem_labels_v1.schema.json)。

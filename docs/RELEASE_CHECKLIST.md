@@ -27,7 +27,7 @@ checksums, licenses, and data-use statements aligned across both distributions.
 
 The `.gitignore` and source manifest exclude `.work/`, caches, build outputs,
 custom checkpoints and generated research data from the code distribution.
-The verified pretrained v1 weight file is explicitly included.
+The bundled pretrained v1 weight file is included.
 
 ## Version and documentation
 
@@ -47,7 +47,7 @@ The verified pretrained v1 weight file is explicitly included.
 
 - [ ] Run the complete test suite in an environment with the required SimNIBS
   and CUDA dependencies; investigate failures and skipped tests before release.
-- [ ] Check inference, preprocessing, FEM contracts, training, resume, CLI
+- [ ] Check inference, preprocessing, FEM data validation, training, resume, CLI
   entry points, and package resource consistency.
 - [ ] Run Markdown lint with the repository configuration and validate local
   links. Keep only the two READMEs at the root.
@@ -70,7 +70,7 @@ The verified pretrained v1 weight file is explicitly included.
 
 ## Model weights and data-use notices
 
-- [ ] Include applicable licenses, data-use notices, versions, model contracts,
+- [ ] Include applicable licenses, data-use notices, versions, model descriptions,
   and checksums with the bundled weights.
 - [ ] Confirm that weights contain only the expected model tensors, with no
   optimizer, scheduler, scaler, step counts, metrics, identifiers, or unused

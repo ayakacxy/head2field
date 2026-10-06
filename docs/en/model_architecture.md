@@ -7,7 +7,7 @@
 Head2Field v1 combines anatomical encoding, query features, and electrode
 geometry to predict the 75 source-to-Oz lead fields. Its fixed factory and strict
 weight schema keep the architecture consistent across training and inference.
-The model contract is described below; intended uses and limitations are in
+The architecture is described below; intended uses and limitations are in
 [MODEL_CARD.md](../MODEL_CARD.md).
 The [code guide](code_guide.md) maps each stage to its implementation and lists
 the tensor dimensions used throughout the network.
@@ -22,8 +22,8 @@ The model combines three kinds of information:
 3. ordered source and reference electrode coordinates in world-RAS millimetres.
 
 The prepared-subject loader validates the source data before these tensors are
-constructed. Coordinate conversion is explicit; array indices are not treated as
-world coordinates.
+constructed. Voxel indices and world coordinates are separate representations, converted
+using the affine.
 
 ## Network outline
 
@@ -60,10 +60,12 @@ The inference session caches subject features and electrode-pair preparation so
 queries can be evaluated in bounded chunks. Chunking changes memory use but must
 not change source order, query order, coordinate frame, or output units.
 
-## Fixed v1 factory
+<a id="fixed-v1-factory"></a>
 
-`create_head2field_v1()` is the only official v1 factory. Its exact
-constructor values are mirrored in [`../configs/head2field_v1.json`](../../configs/head2field_v1.json).
+## Creating the v1 model
+
+`create_head2field_v1()` creates the v1 model used by the bundled weights.
+Its architecture settings are listed in [`../configs/head2field_v1.json`](../../configs/head2field_v1.json).
 The weight loader additionally checks:
 
 - a non-empty `str -> Tensor` mapping with no wrapper metadata;
@@ -72,9 +74,8 @@ The weight loader additionally checks:
 - exact key names and tensor shapes; and
 - strict loading with no missing or unexpected parameters.
 
-Changing any factory field, parameter key, coordinate convention, or model-input
-transform creates a different model contract and requires a separately reviewed
-version.
+Changing the architecture, parameter keys, coordinates, or input processing
+requires a new model version and compatible weights.
 
 ## Stable top-level API
 
@@ -85,12 +86,12 @@ The `head2field` namespace exports only:
 - `Head2FieldInferenceSession`; and
 - `load_head2field_v1_weights`.
 
-Preprocessing, FEM, and training remain behind explicit submodules and CLI
-profiles and do not add heavy optional imports to this top-level API.
+Use the corresponding submodules or commands for preprocessing, FEM, and
+training. Optional dependencies are loaded only when those features are used.
 
 ## Model versions
 
-Model releases use explicit versioned names: `Head2FieldV1`,
+The current model uses the versioned names: `Head2FieldV1`,
 `create_head2field_v1()`, `load_head2field_v1_weights()`,
 `configs/head2field_v1.json`, and `head2field_v1_weights.pth` describe the current
 model. Future model versions follow the same naming pattern with their own

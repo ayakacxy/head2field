@@ -47,10 +47,10 @@ source/query combination in a complete training epoch, including partial final
 batches. Validation and test use the scale derived from the training partition.
 Regenerate statistics when changing the regional settings or training split.
 
-Prepared subjects, FEM labels, target caches, and physics pools have explicit
-validation contracts. Resume requires the saved configuration and dataset
-contract to match the new run. Initializing from an inference state dictionary
-starts a fresh optimizer and training state.
+Prepared subjects, FEM labels, target caches, and physics samples are checked
+for format and numerical consistency. Resume requires the saved configuration
+and dataset records to match the previous run. Starting training from an
+inference state dictionary creates a fresh optimizer and training state.
 
 ## Dataset splits and evaluation
 
@@ -85,7 +85,7 @@ Record the hardware, software versions, query count, chunk sizes, and execution
 mode. Measure input loading, preprocessing, model loading, compilation when
 used, warmup, inference, device-to-host transfer, and output I/O separately.
 
-Use CUDA synchronization at measurement boundaries for GPU execution. Distinguish
+Synchronize CUDA before and after GPU measurements. Distinguish
 cold starts from repeated runs with cached model or subject features. State
 whether output writing and flushing are included. End-to-end measurements should
 include every stage needed by the intended workflow; report lead-field inference
@@ -96,6 +96,6 @@ separately when comparing that stage alone.
 The reusable basis and Python query API support application-specific field
 synthesis and evaluation. Current optimization, cohort statistical analysis,
 and figure generation are separate application workflows. Preserve the basis
-manifest, source currents, query coordinates, and weight identity with derived
+manifest, source currents, query coordinates, and weight filename and checksum with derived
 results. See the [model card](../MODEL_CARD.md) for intended use and limitations,
 and the [citation guide](../CITATION_GUIDE.md) for references.

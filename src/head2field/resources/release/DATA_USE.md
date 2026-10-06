@@ -38,8 +38,8 @@ paths.
 
 The included generators create deterministic, small, non-anatomical arrays and
 fictional identifiers. They do not transform, average, or redistribute data from
-real participants. Their purpose is to verify software contracts and workflows,
-not to establish model accuracy or biological validity.
+real participants. They check file loading and software workflows; they do not measure accuracy
+on real participant data.
 
 ## HCP acknowledgement and data-use terms
 

@@ -31,5 +31,5 @@ Validation checks current, reference, field, units, tissues, source order,
 coordinates, conductivity, numerical arrays and safe paths. There is one
 validation mode. Older optional digest fields do not determine acceptance.
 Outputs publish atomically from sibling staging and never overwrite existing
-results. See [contracts](data_contracts.md) and
+results. See [data formats and checks](data_contracts.md) and
 [FEM schema](../../schemas/fem_labels_v1.schema.json).

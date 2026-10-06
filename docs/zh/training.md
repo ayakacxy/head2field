@@ -4,11 +4,11 @@
 
 [English](../en/training.md) · [简体中文](training.md)
 
-训练流程提供数据与物理损失、明确的数据集合同、数据准备命令、CUDA FP16 epoch 训练、确定性验证和完整本地恢复状态。影像、prepared subject、FEM 标签、缓存、统计量和物理池由用户准备，日志及恢复状态保存在本地。
+本指南介绍训练数据准备、CUDA FP16 训练、验证和断点恢复。训练目标包括数据损失与物理损失。影像、预处理数据、FEM 标签、缓存、统计量和物理损失采样数据由用户准备；日志和恢复文件保存在本地。
 
 <a id="execution-profiles"></a>
 
-## 执行配置
+## 选择训练配置
 
 以下命令使用 `configs/` 中的现有配置。仅安装 wheel 时，可按[上手指南](getting_started.md#configuration-files-after-wheel-installation)复制内置默认配置。
 
@@ -39,9 +39,9 @@
 | 早停 | 连续五轮验证损失未降低 |
 | 测试 checkpoint | 按验证损失选择的最优 checkpoint |
 
-每个 epoch 访问全部训练被试，以及所有电极批次与查询分块组合。被试、源和查询顺序每轮确定性打乱，包含末尾不完整批次和分块，因此覆盖全部 75 个源电极对与 GM/WM 查询。epoch 步数是各被试 `ceil(75 / 8) * ceil(number_of_queries / 49152)` 之和。学习率在 epoch 内保持不变，仅在该轮结束后推进。
+每个 epoch 访问全部训练被试，以及所有电极批次与查询分块组合。被试、源和查询顺序按随机种子在每轮打乱，包含末尾不完整批次和分块，因此覆盖全部 75 个源电极对与 GM/WM 查询。epoch 步数是各被试 `ceil(75 / 8) * ceil(number_of_queries / 49152)` 之和。学习率在 epoch 内保持不变，仅在该轮结束后推进。
 
-AMP 初始梯度 scale 为 1024，增长间隔为 2000。合成安装配置采用仅供测试的 8³ 小模型、CPU FP32 和两个紧凑 epoch，与真实数据训练设置分别管理。
+AMP 初始梯度 scale 为 1024，增长间隔为 2000。合成安装配置采用仅供测试的 8³ 小模型、CPU FP32 并运行两个 epoch，仅用于安装和恢复检查。
 
 <a id="data-and-physics-objective"></a>
 
@@ -49,11 +49,11 @@ AMP 初始梯度 scale 为 1024，增长间隔为 2000。合成安装配置采�
 
 v1 GP 目标采用：
 
-- 固定 N128 GP 工厂和 75 个有序 source→Oz 电极对；
+- N128 GP 模型和 75 个有序 source→Oz 电极对；
 - 磁盘上的原始 `S/m` 标量电导率，以及共享的 float32 `sigma / 1.654` 网络变换；
 - 全局、径向与高场稳定能量数据项，权重为 `0.60 / 0.30 / 0.10`；
-- 分母 floor 比例 `0.01`，径向边界 50 与 100 mm，源对权重 `(alpha=1, sigma=40 mm)`，peak 分位数 0.90；
-- 环流、WM/GM 法向电流连续性、WM/GM 切向电场连续性及通量算子，每类 512 个原语；
+- 分母下限比例 `0.01`，径向分区阈值为 50 与 100 mm，源对权重 `(alpha=1, sigma=40 mm)`，peak 分位数 0.90；
+- 环流、WM/GM 法向电流连续性、WM/GM 切向电场连续性及通量计算，每类使用 512 组积分采样数据；
 - `one_sided_excess_v1`、仅由训练数据拟合的 FEM scale floor 和 MAD，各物理项权重为 5，10,000 步内从 0 递增到 1 的 curriculum；
 - world-RAS 向量分量，单位为 `V/m`，对应源电极 `+1 mA` 和 Oz `-1 mA`。
 
@@ -63,22 +63,22 @@ v1 GP 目标采用：
 
 <a id="real-data-manifest"></a>
 
-## 真实数据清单
+## 训练数据清单
 
-机器 schema 为 [`training_dataset_v1.schema.json`](../../schemas/training_dataset_v1.schema.json)。全部路径相对于数据集清单，每个引用清单均记录明确的相对路径。每个匿名 `subject_key` 引用：
+清单字段定义见 [`training_dataset_v1.schema.json`](../../schemas/training_dataset_v1.schema.json)。全部路径相对于数据集清单，引用的文件也使用相对路径。每个匿名 `subject_key` 引用：
 
 1. `prepared_subject_v1.json`；
 2. `fem_labels_v1.json`；
 3. `training_loss_statistics_v2.json`；
 4. `training_physics_pool_v1.json`。
 
-加载器重新验证 prepared subject 与全部 75 个 FEM 标签文件，核对源顺序、查询顺序、电导率表及 `sigma / 1.654` 变换、数组形状、dtype、有限值和文件大小。分组决定 `train`、`validation` 或可选 `test` 分区，同一组不能跨分区，训练与验证分区均为必需。
+加载数据时，程序检查预处理数据与全部 75 个 FEM 标签文件，包括源电极和查询点顺序、电导率表、`sigma / 1.654` 变换、数组形状、数据类型和文件大小，并检查是否含 NaN 或 Inf。分组决定 `train`、`validation` 或可选 `test` 分区，同一组不能跨分区，训练与验证分区均为必需。
 
-修改训练配置、分组、引用数据路径或源顺序会改变运行合同，已有状态不能直接恢复到不同合同的运行。
+恢复训练时，配置、数据分组、文件路径和源电极顺序必须与上次运行一致。需要修改这些设置时，请开始新的训练运行。
 
 <a id="asset-preparation"></a>
 
-## 资产准备
+## 训练数据准备
 
 以下目标目录均必须尚不存在。命令使用 staging 目录，不覆盖已有输出。
 
@@ -140,7 +140,7 @@ head2field-train \
   --output-dir runs/synthetic-smoke
 ```
 
-该流程以 CPU FP32 最多运行两个 epoch，经过模型 forward、稳定能量损失、四类物理算子、训练状态机和确定性验证。小模型仅供测试，不接受 N128 预训练初始化权重。
+示例使用 CPU FP32，最多运行两个 epoch，检查模型前向计算、数据与物理损失、训练状态保存及验证流程。小模型仅用于测试，不能加载完整 N128 模型的预训练权重。
 
 <a id="real-data-training"></a>
 
@@ -172,15 +172,22 @@ head2field-train \
   --output-dir runs/part-b
 ```
 
-完整本地状态包含模型、AdamW、余弦调度器、AMP scaler、全局步数、Python/NumPy/Torch CPU/CUDA RNG、命名的增强/dropout generator、采样器排列与游标、验证最优损失及模型、早停计数、精确运行合同和之前全部日志行。状态先写入同目录临时文件，刷新后原子发布，不覆盖已有文件。这些是本地资产，不能放入 `src/head2field/resources/weights/`。
+恢复文件保存以下内容：
 
-CPU 确定性回归比较连续运行 `N` 步与运行 `K` 步、保存/重载、再继续至 `N` 步：模型张量、优化器、调度器、全部 RNG、采样器、早停状态和规范 JSONL 日志完全相同。CUDA 状态也保存，但 CPU 测试不证明 CUDA 位级等价。
+- 模型、AdamW、学习率调度器和 AMP scaler 状态；
+- 当前步数、采样顺序和当前位置，以及 Python、NumPy、Torch CPU/CUDA 和增强/dropout 的随机数状态；
+- 验证最优模型、验证损失和早停计数；
+- 本次运行的配置、数据集记录和已有日志。
+
+程序先写入同目录的临时文件，再保存为恢复文件，不覆盖已有文件。恢复文件只用于本地训练，不应放进 `src/head2field/resources/weights/`。
+
+CPU 测试比较连续运行 `N` 步与运行 `K` 步后保存、重新加载并继续到 `N` 步的结果。模型、优化器、调度器、随机数状态、采样器、早停计数和 JSONL 日志均相同。CUDA 随机数状态也会保存，但 GPU 是否能逐位复现需要另外测试。
 
 <a id="validation-and-outputs"></a>
 
 ## 验证与输出
 
-验证按固定顺序遍历全部验证被试及源/查询组合，使用 `model.eval()`、确定性分支，不使用训练 generator。组合数据与物理目标按被试平均，始终采用 `a(t)=1`。每轮验证指标、学习率和早停计数写入 step 日志。验证损失严格降低时重置计数并选取新的最优 checkpoint；连续五轮无改善时停止。
+验证按固定顺序遍历全部验证被试及源/查询组合，使用 `model.eval()`、关闭随机增强，不使用训练 generator。组合数据与物理目标按被试平均，始终采用 `a(t)=1`。每轮验证指标、学习率和早停计数写入 step 日志。验证损失严格降低时重置计数并选取新的最优 checkpoint；连续五轮无改善时停止。
 
 训练在新目录输出：
 
@@ -194,4 +201,4 @@ train_state_step_000005000.pt
 
 `best_model.pt` 是按验证损失选择的裸模型 state dictionary，返回的内存模型恢复到该权重以进行测试。恢复状态保留最新训练模型及完整优化器/调度器状态。中断运行导出已完成验证 epoch 中的最优 checkpoint。真实数据清单含 `test` 分区时，在达到 epoch 预算或早停后，使用恢复的最优模型评估一次，写入 `test_metrics_v1.json`。人为中途停止训练不触发测试评估。
 
-这些输出是自定义模型产物。用于推理前，应记录对应配置、数据划分和评估结果。参与者数据由用户另行提供。
+使用这些训练结果进行推理时，请一同保存训练配置、数据划分和评估结果。参与者数据由用户另行提供。

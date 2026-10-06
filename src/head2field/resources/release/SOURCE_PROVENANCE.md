@@ -17,7 +17,7 @@ Paths below are relative to the repository root.
 | Component | Main source paths | Responsibility |
 | --- | --- | --- |
 | Model and architecture | `src/head2field/model.py`, `src/head2field/_spec.py` | Anatomical encoding, query/electrode tokens, shared responses, and the fixed v1 factory |
-| Inputs and geometry | `src/head2field/inputs.py`, `src/head2field/geometry.py` | Model tensors, voxel/world transforms, and ordered query/electrode identities |
+| Inputs and geometry | `src/head2field/inputs.py`, `src/head2field/geometry.py` | Model tensors, voxel/world transforms, and query-row indices and electrode order |
 | Weight loading | `src/head2field/weights.py` | Bundled model access and strict FP32 state-dictionary validation |
 | Inference | `src/head2field/inference.py`, `src/head2field/cli.py` | Subject caches, pair/query batching, field arrays, and prediction manifests |
 | Preprocessing | `src/head2field/preprocessing/` | T1 preparation, external CHARM invocation, conductivity, and prepared-subject assembly |
@@ -30,7 +30,7 @@ Paths below are relative to the repository root.
 Loaders validate the actual arrays, geometry, tissue conductivities, source/query
 order, file sizes, and units. Each workflow has a defined manifest and produces
 new output directories. Training resume verifies the saved configuration and
-dataset contract. See [data contracts](en/data_contracts.md) for the schemas and
+dataset records. See [data formats](en/data_contracts.md) for the schemas and
 [inference](en/inference.md) for output interpretation.
 
 The model factory and weight loader share the v1 parameter keys and tensor

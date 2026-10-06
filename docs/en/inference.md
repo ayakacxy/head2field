@@ -6,11 +6,10 @@ For installation and input preparation, start with [getting started](getting_sta
 
 ## Requirements
 
-Inference requires a validated prepared subject. The installation includes the
-pretrained Head2Field v1 weights and selects them by default.
-The minimal installation uses the prepared-subject, conductivity, electrode-order,
-and validation contracts without importing the preprocessing, FEM, or training
-pipelines, SimNIBS, SciPy, or h5py. FEM labels are not required.
+Inference uses preprocessed subject data and loads the bundled Head2Field v1
+weights by default. The base installation is sufficient and does not load the
+preprocessing, FEM, or training pipelines, SimNIBS, SciPy, or h5py. FEM labels
+are not needed.
 
 ## CLI
 
@@ -66,7 +65,7 @@ new-output-dir/
 
 `lead_field_float32.npy` has shape `[75, Q, 3]`, dtype float32, and axis order
 `[source, query, world_ras_component]`. Components follow world-RAS. The field
-unit is `V/m` for the fixed `+1 mA` source and `-1 mA` Oz reference contract.
+unit is `V/m` for the `+1 mA` source and `-1 mA` Oz reference convention.
 
 | File | Interpretation |
 | --- | --- |

@@ -21,8 +21,8 @@ and authors; it has no publication year or DOI entry.
 
 The software citation in [CITATION.cff](../CITATION.cff) identifies **Head2Field**,
 version **0.1.0**, with **ayakacxy** as the software author.
-Record the package version used in your work; the software version and the
-Head2Field v1 model contract are tracked independently.
+Record the package version used in your work; the software and
+model have separate version numbers.
 
 Also cite the relevant methods and data sources described in
 [data use](DATA_USE.md) and [implementation and dependencies](SOURCE_PROVENANCE.md).
