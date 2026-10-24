@@ -2,79 +2,78 @@
 
 [English](MODEL_CARD.md) · [简体中文](MODEL_CARD_zh.md)
 
-This card describes the Head2Field v1 model, its inputs and outputs, training
-defaults, bundled weights, and intended use. Method references are listed in the
+This page describes the model inputs and outputs, training settings, weights,
+and intended use. Method references are listed in the
 [citation guide](CITATION_GUIDE.md).
 
 ## Model summary
 
-`Head2FieldV1` is a PyTorch model for subject-specific TES electric
-lead-field prediction. It combines a T1-derived head representation with
-electrode and GM/WM query coordinates. The v1 model uses isotropic scalar
-conductivities and the relation
+`Head2FieldV1` predicts subject-specific TES lead fields from a T1-derived head
+representation, electrode positions, and GM/WM query coordinates. It uses
+isotropic scalar conductivities and represents each source-to-reference field
+as the difference between two shared electrode responses:
 
 ```text
 E(x; source -> reference) = G(x, source) - G(x, reference)
 ```
 
-The model predicts 75 source-to-Oz maps. Its output is a float32 `[75, Q, 3]`
-array with world-RAS components `[Ex, Ey, Ez]`, in `V/m` for `+1 mA` at each
-source and `-1 mA` at Oz. Inference requires prepared inputs and compatible
-weights; FEM labels are needed for supervised training, not prediction.
+The output is a float32 `[75, Q, 3]` array: 75 source-to-Oz maps at `Q` query
+locations, with world-RAS components `[Ex, Ey, Ez]`. Values are in `V/m` for
+`+1 mA` at the source and `-1 mA` at Oz. Prediction uses prepared inputs and
+compatible weights. FEM labels are used for supervised training.
 
 <a id="versioning-and-input-contract"></a>
 
 ## Model version and input requirements
 
-The model version is `v1`; the software package version is recorded in
-`pyproject.toml` and `CITATION.cff`. A software patch does not by itself create a
-new trained model or change the input and output formats.
+The model version is `v1`. The software version is recorded separately in
+`pyproject.toml` and `CITATION.cff`; changing the software does not retrain the
+model or automatically change its input and output formats.
 
-Head2Field v1 uses the following inputs and outputs:
+The model expects:
 
 - T1 as the only raw imaging modality;
-- a canonical `256 x 256 x 256`, 1 mm RAS prepared-input grid;
-- ten foreground tissue classes plus background and the
+- prepared inputs on a `256 x 256 x 256`, 1 mm RAS grid;
+- ten foreground tissue classes plus background, with the
   `simnibs-4.6-isotropic-v1` scalar-conductivity table in `S/m`;
-- twelve model-input channels: ten tissue indicators, conductivity formed in
+- twelve input channels: ten tissue indicators, conductivity calculated in
   float32 as `sigma_s_per_m / 1.654`, and normalized T1 intensity;
-- the fixed v1 model factory, using a 128-cube encoder input;
-- 76 ordered cap electrodes, with Oz as reference and 75 ordered sources;
-- GM/WM query order matching the inputs and affine-based voxel/world-coordinate conversion;
-- the current convention and output units stated above; and
-- strict FP32 weight loading with fixed parameter keys and tensor shapes.
+- a 128-cube encoder input produced by the fixed v1 model factory;
+- 76 ordered cap electrodes: Oz as reference and 75 ordered sources;
+- GM/WM queries in the recorded input order, with voxel/world positions
+  converted through the image affine;
+- the current convention and output units given above; and
+- FP32 weights with the expected parameter names and tensor shapes.
 
-See [input requirements](en/input_contract.md),
-[architecture](en/model_architecture.md), and
-[data formats](en/data_contracts.md) for the machine-readable details.
+File layouts and validation details are in
+[input requirements](en/input_contract.md) and [data formats](en/data_contracts.md).
+The [architecture guide](en/model_architecture.md) describes the network.
 
 ## Training
 
-The default real-data profile uses AdamW with initial learning rate `2e-4`
-and weight decay `1e-4`. Each step processes one subject, eight source-to-Oz
-pairs, and query chunks of 49,152 GM/WM locations. Training uses CUDA FP16 AMP
-and gradient norm clipping at 1.0.
+The default real-data configuration uses AdamW, an initial learning rate of
+`2e-4`, weight decay of `1e-4`, CUDA FP16 AMP, and gradient norm clipping at 1.0.
+Each step processes one subject, eight source-to-Oz pairs, and a chunk of
+49,152 GM/WM query locations.
 
-Each epoch covers the complete source-batch/query-chunk combinations for every
-training subject. The maximum budget is 25 epochs, with a cosine schedule over
-25 epochs. Validation runs at epoch end with the combined data/physics objective
-and `a(t)=1`. Five consecutive non-improving validation epochs stop training;
-the best validation checkpoint is selected for test evaluation.
+An epoch covers every source-batch/query-chunk combination for each training
+subject. Training runs for at most 25 epochs with a 25-epoch cosine schedule.
+Epoch-end validation uses the combined data and physics objective with
+`a(t)=1`. Training stops after five consecutive epochs without improvement;
+test evaluation uses the checkpoint with the best validation result.
 
-The data objective uses 50/100 mm radial regions and fixed per-step scaling
-`M / (75 * N_train)`. Its statistics format is `training_loss_statistics_v2`.
+The data loss uses 50/100 mm radial regions, per-step scaling
+`M / (75 * N_train)`, and statistics in `training_loss_statistics_v2` format.
+It is combined with circulation, WM/GM normal-current continuity,
+tangential-field continuity, and flux losses. Physics thresholds are fitted
+only on training data. The run settings record group-disjoint training,
+validation, and test partitions and their data paths.
 
-The objective combines stable-energy data loss with circulation, WM/GM
-normal-current continuity, tangential-field continuity, and flux terms. Physics
-thresholds are fitted on training data. Group-disjoint train/validation/test
-partitions and data paths are part of the training run settings. See
-[training](en/training.md) for loss settings, data preparation, and resume.
+See [training](en/training.md) for preparation, loss settings, and resume steps.
 
 <a id="verified-weight-format"></a>
 
 ## Bundled weight format
-
-The bundled v1 weight file contains:
 
 | Field | Value |
 | --- | --- |
@@ -83,53 +82,56 @@ The bundled v1 weight file contains:
 | Scalar values | 2,607,870 |
 | File size | 10,497,106 bytes |
 
-It contains no optimizer, scheduler, scaler, step, epoch, metric, manifest,
-participant identifier, path, sampler, or RNG state. Tensor keys and shapes
-match the v1 factory. These pretrained weights are bundled with the wheel and
-source distribution and selected by default; see
-[weight documentation](../weights/README.md) and [data use](DATA_USE.md).
+The file stores model tensors only. It contains no optimizer, scheduler,
+scaler, step, epoch, metric, manifest, participant identifier, path, sampler,
+or RNG state. Parameter names and tensor shapes match the v1 factory.
+The wheel and source distribution include these weights and load them by
+default. See [weights](../weights/README.md) and [data use](DATA_USE.md).
 
 ## Intended use
 
-The model supports non-clinical research, software validation, method
-comparison, and reproducible TES field-modeling experiments on inputs that meet
-the v1 input requirements. Users should understand neuroimaging spatial metadata,
-electrode/current conventions, and numerical validation of learned surrogates.
+Head2Field is intended for non-clinical TES research, method comparison,
+software validation, and reproducible field-modeling experiments.
+Its inputs require careful handling of imaging coordinates, electrode order,
+currents, and units, as well as numerical comparison with suitable reference
+results.
 
-The package predicts a lead-field basis. It does not perform stimulation-current
-optimization, treatment planning, or uncertainty quantification.
+The package predicts a lead-field basis. Stimulation-current optimization,
+treatment planning, and uncertainty quantification are outside its scope.
 
 ## Limitations
 
-- Invalid tissue labels, conductivities, affines, electrode order, query order,
-  or units can invalidate predictions even when tensor shapes are correct.
-- The model uses fixed isotropic scalar conductivities. Using anisotropic conductivity or
-  changing input channels or tissue labels requires a new compatible model and weights.
-- Training data do not establish performance for every scanner, imaging
-  protocol, age group, pathology, lesion, implant, or unusual anatomy.
-- Outputs have no calibrated uncertainty estimate.
+- Correct array shapes alone do not establish correct tissue labels,
+  conductivities, affines, electrode/query order, or units.
+- The model uses fixed isotropic scalar conductivities. Anisotropic
+  conductivity, different input channels, or different tissue labels require
+  a compatible model and new weights.
+- Performance has not been established for every scanner, imaging protocol,
+  age group, pathology, lesion, implant, or unusual anatomy.
+- Outputs do not include calibrated uncertainty estimates.
 - Predictions have not been validated for diagnosis, treatment selection,
   patient safety decisions, or autonomous clinical control.
 
-Subject-appropriate FEM comparison remains necessary when an experiment depends
-on accuracy outside the established evaluation conditions.
+Use subject-appropriate FEM comparisons when the required accuracy extends
+beyond the established evaluation conditions.
 
 ## Reproducibility and evaluation
 
-The repository includes synthetic tests for weight/schema loading, coordinate
-and source and query ordering, preprocessing/FEM adapters, full epoch coverage,
-learning-rate scheduling, validation, early stopping, and local resume.
-CUDA FP16 operation has also been exercised on synthetic inputs.
+Synthetic tests cover weight/schema loading, coordinates, source and query
+ordering, preprocessing/FEM adapters, complete epochs, learning-rate
+scheduling, validation, early stopping, and local resume. CUDA FP16 operation
+has also been exercised with synthetic inputs.
 
-These checks establish software behavior and compatibility. They do not measure
-cohort accuracy, generalization, clinical validity, or end-to-end equivalence to
-FEM. Reproducing a scientific result requires the corresponding data split,
-input preparation, model weights, evaluation protocol, and lawful data access.
+These tests check software behavior. To assess accuracy, generalization, or
+agreement with FEM, use the corresponding data split, preparation method,
+weights, and evaluation protocol. Access to participant data remains subject
+to the applicable terms; synthetic test results do not establish clinical
+validity.
 
 ## Data and acknowledgements
 
-Participant-level data and training-resume states are excluded from source and
-Python distributions. Model development benefited from WU-Minn HCP data; the
-[data-use document](DATA_USE.md) provides upstream terms and acknowledgement
-references. The source-code license, dataset terms, and any weight notice
-apply to their respective materials.
+Source and Python distributions exclude participant-level data and complete
+training-resume states. Development benefited from WU-Minn HCP data.
+[Data use](DATA_USE.md) lists the upstream terms and acknowledgement references.
+The code license, dataset terms, and weight notices apply to their respective
+materials.

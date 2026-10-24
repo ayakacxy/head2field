@@ -4,15 +4,15 @@
 
 [English](../en/inference.md) · [简体中文](inference.md)
 
-安装与输入准备从[上手指南](getting_started.md)开始。
+先预测被试的先导场基底，再按源电极电流组合成刺激电场。
+安装和数据准备步骤见[上手指南](getting_started.md)。
 
 <a id="requirements"></a>
 
 ## 使用条件
 
-推理使用预处理后的被试数据，默认加载安装包内的 Head2Field v1 权重。
-
-基础安装即可运行推理，不需要 FEM 标签。运行时不会导入预处理、FEM 或训练模块，也不会加载 SimNIBS、SciPy 或 h5py。
+准备好预处理后的被试目录即可运行。基础安装已包含预训练权重，推理不需要 FEM 标签。
+预测命令不导入预处理、FEM 或训练流程，也不需要 SimNIBS、SciPy 或 h5py。
 
 <a id="cli"></a>
 
@@ -27,30 +27,34 @@ head2field-predict \
   --electrode-batch-size 76
 ```
 
-添加 `--weights /path/to/custom_v1.pth` 可选择兼容的自定义裸 state dictionary。prepared subject 目录及自定义权重文件必须存在；输出目录必须尚不存在，且不能位于 prepared subject 目录内部。命令不覆盖已有输出目录。
+命令默认加载内置权重，也可通过 `--weights /path/to/custom_v1.pth` 指定兼容的自定义权重。
+自定义权重文件只能包含 FP32 模型参数（state dictionary）。输入文件必须存在，输出目录必须尚不存在，
+且不能位于被试目录内部；已有输出不会被覆盖。
 
 | 参数 | 默认值 | 含义 |
 | --- | --- | --- |
-| `--prepared-subject` | 必需 | 包含 `prepared_subject_v1.json` 及声明文件的目录 |
+| `--prepared-subject` | 必需 | 包含 `prepared_subject_v1.json` 及其引用文件的目录 |
 | `--output-dir` | 必需 | 位于输入目录之外的新目录 |
-| `--weights` | 内置预训练 v1 | 可选的兼容裸 FP32 state dictionary |
+| `--weights` | 内置预训练 v1 | 自定义模型的 FP32 参数文件，名称和形状须兼容 |
 | `--device` | `cpu` | PyTorch 设备，支持 `cuda` 和 `cuda:0` |
-| `--query-chunk-size` | `32768` | 每个推理分块最多包含的 GM/WM 查询行数 |
-| `--electrode-batch-size` | `76` | 电极编码与源/参考电极对解码的批次上限 |
+| `--query-chunk-size` | `32768` | 每块最多处理的 GM/WM 查询点数量 |
+| `--electrode-batch-size` | `76` | 电极编码和源/参考电极对解码的批次上限 |
 
-较小显存的 GPU 可从 `--query-chunk-size 8192 --electrode-batch-size 8` 开始。这些设置限制网络工作内存，完整输出仍包含全部 75 个源电极和每个 prepared query。CLI 通过 NumPy 内存映射写入电场数组，推理采用 FP32 和评估模式。
+显存较小时，可从 `--query-chunk-size 8192 --electrode-batch-size 8` 开始。
+减小分块可以降低计算时的内存需求，完整输出仍覆盖全部 75 个源电极和所有查询点。
+命令以 FP32、评估模式运行，通过 NumPy 内存映射写入电场数组。
 
 <a id="processing-sequence"></a>
 
 ## 处理顺序
 
-1. 验证 prepared 数组、空间元数据及电极/查询顺序。
-2. 构造 v1 输入张量，严格加载内置或自定义权重。
-3. 在推理 session 中缓存解剖与电极特征。
-4. 按查询顺序分块计算，将全部 75 个电极对电场写入内存映射数组。
-5. 检查输入文件未发生变化，写入查询坐标、电极对记录和预测清单。
+1. 检查输入数组、空间信息，以及电极和查询点顺序。
+2. 构造模型输入，按参数名和形状严格加载权重。
+3. 缓存该被试的解剖特征和电极特征。
+4. 按顺序分块计算，写出全部 75 个电极对的电场。
+5. 确认输入文件未改变，保存坐标、电极对和预测清单。
 
-调整分块大小会影响内存使用，但不改变电极或查询点的顺序、坐标系和输出单位。
+分块大小影响内存使用，不改变电极顺序、查询点顺序、坐标或单位。
 
 <a id="output-tree"></a>
 
@@ -65,30 +69,36 @@ new-output-dir/
 └── prediction_manifest_v1.json
 ```
 
-`lead_field_float32.npy` 形状为 `[75, Q, 3]`，dtype 为 float32，轴顺序是 `[source, query, world_ras_component]`。分量采用 world-RAS，电场单位为 `V/m`，对应固定的源电极 `+1 mA`、Oz 参考 `-1 mA`。
+`lead_field_float32.npy` 为 float32 `[75, Q, 3]` 数组，
+轴顺序为 `[source, query, world_ras_component]`。
+向量分量是 world-RAS `[Ex,Ey,Ez]`，单位为 `V/m`，
+对应源电极 `+1 mA`、Oz `-1 mA`。
 
 | 文件 | 含义 |
 | --- | --- |
-| `lead_field_float32.npy` | `[75,Q,3]` world-RAS 向量，源轴顺序由清单规定 |
-| `query_ijk.npy` | `[Q,3]` int32 canonical 网格索引，与查询轴对应 |
-| `query_world_ras_mm.npy` | `[Q,3]` float32 world-RAS 毫米位置 |
+| `lead_field_float32.npy` | `[75,Q,3]` world-RAS 向量，源轴顺序见清单 |
+| `query_ijk.npy` | `[Q,3]` int32 网格索引，与查询轴对应 |
+| `query_world_ras_mm.npy` | `[Q,3]` float32 world-RAS 毫米坐标 |
 | `electrode_pairs.json` | 有序源/Oz 名称、坐标及 +1/-1 mA 电流 |
-| `prediction_manifest_v1.json` | 输入信息、轴、单位和 `source_names` |
+| `prediction_manifest_v1.json` | 输入、权重、输出信息，以及轴、单位和 `source_names` |
 
-查询轴仅包含 prepared GM/WM 行，不是整个头部网格的展开数组。将结果写回体素体积时应使用 `query_ijk.npy`。
+查询轴只包含 GM/WM 点。写回体素体积时，请用 `query_ijk.npy` 放置各行，
+不要将数组直接变形为整个头部网格。
 
 <a id="combine-source-currents"></a>
 
 ## 组合源电流
 
-源电流 `I_s` 以 **mA** 表示时，可复用基底满足：
+源电流 `I_s` 以 **mA** 表示，按下式组合基底：
 
 ```text
 E(query) = sum_s I_s * basis[s, query]
 I_Oz = -sum_s I_s
 ```
 
-数值系数基于 1 mA 基底，使用安培电流时应先换算为 mA。电流顺序遵循清单的 `source_names`，参考为 Oz。例如，F3 +2 mA 与 F4 -2 mA 对应 Oz 净电流为零：
+基底按 1 mA 计算，因此用安培表示的电流需要先换算成 mA。
+电流顺序必须与清单中的 `source_names` 相同，Oz 电流为各源电流之和的相反数。
+例如，F3 +2 mA、F4 -2 mA 时，Oz 的净电流为零：
 
 ```python
 import json
@@ -109,13 +119,14 @@ field_V_per_m = np.einsum("p,pqc->qc", currents_mA, basis[:, :32768, :])
 print(field_V_per_m.shape, "Oz current (mA):", -currents_mA.sum())
 ```
 
-应先组合向量分量，再计算电场幅值。保存衍生电场时，也应保留电流向量、源顺序及基底清单。
+先对向量分量求和，再计算电场幅值。保存组合后的电场时，请同时记录电流向量、
+源电极顺序和基底清单。
 
 <a id="python-api"></a>
 
 ## Python API
 
-生成与 CLI 相同的文件和清单：
+写出与 CLI 相同的文件：
 
 ```python
 from pathlib import Path
@@ -129,7 +140,7 @@ array_path = predict_prepared_subject_v1(
 )
 ```
 
-不写入完整基底、流式处理选定查询：
+不写入完整基底，逐块处理查询点：
 
 ```python
 from pathlib import Path
@@ -160,12 +171,19 @@ for chunk in session.iter_predictions(rows, electrodes, query_chunk_size=32768):
     # chunk.row_indices 标识这些查询在 subject.gmwm_ijk 中的行。
 ```
 
-`Head2FieldInferenceSession` 和权重加载工厂是稳定的顶层导出。prepared subject 构建与底层分块流程可通过相应实现模块调用。
+`Head2FieldInferenceSession` 和权重加载函数可从包的顶层导入。
+输入构造与底层分块函数可从示例所示模块导入。
 
-模型与推理会话应使用同一设备。`row_indices` 和可选 `pair_indices` 保持传入顺序。每块预测最初保存在推理设备上，需要 CPU 数组时再传输。建议边计算边处理或保存结果，避免长期保留 GPU 张量引用而占用显存。换用其他权重或被试数据时，请新建推理会话，避免复用旧缓存。
+模型和推理会话应位于同一设备。`row_indices` 与可选的 `pair_indices` 保持传入顺序。
+预测张量留在计算设备上，直到显式传输到 CPU。建议逐块处理或保存结果；
+保留 GPU 张量引用也会持续占用显存。
+被试或权重变化后，请新建推理会话，使缓存特征与当前数据一致。
 
 <a id="weights-and-reproducibility"></a>
 
 ## 权重与复现
 
-使用内置 v1 state dictionary 或兼容的自定义 FP32 权重，将权重校验值与软件版本、prepared 输入清单及分块设置一同记录。加载和格式要求见[权重说明](../../weights/README_zh.md)，FEM 对比和运行时间测量见[评估说明](paper_reproduction.md)。
+可以使用内置权重，或参数名称和形状兼容的自定义 FP32 权重。
+请将权重校验值、软件版本、输入清单和分块设置与预测结果一同记录。
+加载要求见[权重说明](../../weights/README_zh.md)，
+FEM 对比和运行时间测量见[评估说明](paper_reproduction.md)。

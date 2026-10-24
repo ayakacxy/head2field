@@ -4,46 +4,51 @@
 
 ## Overview
 
-Head2Field v1 combines anatomical encoding, query features, and electrode
-geometry to predict the 75 source-to-Oz lead fields. Its fixed factory and strict
-weight schema keep the architecture consistent across training and inference.
-The architecture is described below; intended uses and limitations are in
-[MODEL_CARD.md](../MODEL_CARD.md).
-The [code guide](code_guide.md) maps each stage to its implementation and lists
-the tensor dimensions used throughout the network.
+Head2Field encodes a subject's head anatomy, then predicts an electrode
+response at each requested location. Subtracting source and reference responses
+produces the 75 source-to-Oz lead fields. Training and inference use the same
+model structure and input processing.
+
+This guide describes the network. For source files and tensor dimensions, see
+the [code guide](code_guide.md); for intended use and limitations, see the
+[model card](../MODEL_CARD.md).
 
 ## Input streams
 
-The model combines three kinds of information:
+The network takes three inputs:
 
 1. a 12-channel head volume formed from ten tissue indicator channels, normalized
    scalar conductivity, and normalized T1 intensity;
 2. query coordinates and local query features for GM/WM voxels; and
 3. ordered source and reference electrode coordinates in world-RAS millimetres.
 
-The prepared-subject loader validates the source data before these tensors are
-constructed. Voxel indices and world coordinates are separate representations, converted
-using the affine.
+The prepared-subject loader checks the files before constructing these tensors.
+Voxel indices locate data in an array; world coordinates locate points in
+physical space. The image affine converts between them.
 
 ## Network outline
 
-The 128-cube encoder has four levels with 16/32/64/128 channels, group
-normalization, SiLU, and residual bottlenecks. Two 96-dimensional mixer blocks
-use four-head global axial attention at the 16-cube bottleneck. A 32-channel FPN
-combines all four scales through lateral projections and top-down fusion.
+The anatomical encoder takes a 128-cube input through four levels with
+16/32/64/128 channels, group normalization, SiLU, and residual bottlenecks.
+At the 16-cube bottleneck, two 96-dimensional mixer blocks apply four-head
+global axial attention. A 32-channel FPN merges the four scales through
+lateral projections and top-down fusion.
 
-Query tokens combine trilinearly sampled FPN features, original 1 mm input
-features and six-band centroid-relative Fourier coordinates. Two SwiGLU
-residual blocks produce 256-dimensional tokens. A shared electrode encoder
-combines seven-point patches (center and six axial neighbors, 6 mm radius),
-centroid-relative coordinates and 128-dimensional subject context into
-192-dimensional electrode tokens. Gated absolute-coordinate branches supplement
-both token types.
+At each query point, trilinear sampling retrieves FPN features and features
+from the original 1 mm grid. These are combined with six-band Fourier
+coordinates relative to the anatomy centroid. Two SwiGLU residual blocks
+produce a 256-dimensional query token.
 
-Two FiLM-conditioned residual blocks with 128-dimensional bottlenecks decode
-the shared electrode response `G(head, query, electrode)`. Relative geometry
-includes normalized coordinate differences, physical displacement and distance
-scaled by 128 mm. Source-to-reference fields are response differences:
+The shared electrode encoder uses a seven-point patch around each electrode
+(the center and six axial neighbors at a 6 mm radius), centroid-relative
+coordinates, and 128-dimensional subject context. Its output is a
+192-dimensional electrode token. Gated absolute-coordinate branches add
+information to both query and electrode tokens.
+
+The decoder uses two FiLM-conditioned residual blocks with 128-dimensional
+bottlenecks to predict `G(head, query, electrode)`. It receives normalized
+coordinate differences, physical displacement, and distance scaled by 128 mm.
+Subtracting two electrode responses gives their source-to-reference field:
 
 ```text
 E(a -> b) = G(a) - G(b)
@@ -51,22 +56,22 @@ E(a -> b) = -E(b -> a)
 E(a -> c) = E(a -> b) + E(b -> c)
 ```
 
-These identities follow from the shared response bank, with floating-point
-roundoff in their numerical evaluation. There are no separate source/reference
-response networks or role embeddings. The exact settings are recorded in
+The shared response bank gives these antisymmetric and additive relationships,
+up to floating-point roundoff. Both electrode roles use the same network;
+there are no role embeddings. Full settings are in
 `configs/head2field_v1.json`.
 
-The inference session caches subject features and electrode-pair preparation so
-queries can be evaluated in bounded chunks. Chunking changes memory use but must
-not change source order, query order, coordinate frame, or output units.
+During inference, a session caches subject features and prepared electrode
+pairs, then evaluates queries in chunks to limit memory use. The source order,
+query order, coordinate frame, and output units stay the same for every chunk.
 
 <a id="fixed-v1-factory"></a>
 
 ## Creating the v1 model
 
-`create_head2field_v1()` creates the v1 model used by the bundled weights.
-Its architecture settings are listed in [`../configs/head2field_v1.json`](../../configs/head2field_v1.json).
-The weight loader additionally checks:
+Use `create_head2field_v1()` to build the network that matches the bundled
+weights. Its settings are in [`../configs/head2field_v1.json`](../../configs/head2field_v1.json).
+When loading weights, the program requires:
 
 - a non-empty `str -> Tensor` mapping with no wrapper metadata;
 - exactly 208 tensors and 2,607,870 scalar values;
@@ -74,29 +79,28 @@ The weight loader additionally checks:
 - exact key names and tensor shapes; and
 - strict loading with no missing or unexpected parameters.
 
-Changing the architecture, parameter keys, coordinates, or input processing
-requires a new model version and compatible weights.
+If you change the architecture, parameter names, coordinate conventions, or
+input processing, give the model a new version and provide matching weights.
 
 ## Stable top-level API
 
-The `head2field` namespace exports only:
+The public `head2field` namespace provides:
 
 - `Head2FieldV1`;
 - `create_head2field_v1`;
 - `Head2FieldInferenceSession`; and
 - `load_head2field_v1_weights`.
 
-Use the corresponding submodules or commands for preprocessing, FEM, and
-training. Optional dependencies are loaded only when those features are used.
+Preprocessing, FEM, and training have their own submodules and commands.
+Their optional dependencies load when those features are called.
 
 ## Model versions
 
-The current model uses the versioned names: `Head2FieldV1`,
-`create_head2field_v1()`, `load_head2field_v1_weights()`,
-`configs/head2field_v1.json`, and `head2field_v1_weights.pth` describe the current
-model. Future model versions follow the same naming pattern with their own
-architecture configuration and weight loader.
+The bundled model uses `Head2FieldV1`, `create_head2field_v1()`,
+`load_head2field_v1_weights()`, `configs/head2field_v1.json`, and
+`head2field_v1_weights.pth`. A new model version should follow the same naming
+pattern, with its own configuration and weight loader.
 
-The package version (`0.1.0`) and data-schema versions are independent of the
-model version. For example, a `v2` training-statistics schema still describes
-data used to train Head2Field v1.
+Model, package, and data-format versions are separate. The package version
+is `0.1.0`; a `v2` training-statistics schema can still contain statistics used
+to train Head2Field v1.

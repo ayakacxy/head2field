@@ -4,9 +4,12 @@
 
 [English](../en/getting_started.md) · [简体中文](getting_started.md)
 
-本指南介绍安装、预测和小型训练检查。wheel 内置预训练 Head2Field v1 模型、默认配置和技术文档；用户的输入图像与 prepared subject 保存在本地。
+本指南介绍如何安装 Head2Field、准备被试数据，以及预测 75 个先导场。
+wheel 已包含预训练权重、默认配置和技术文档；T1 影像和需要使用的配准模板由用户准备。
 
-安装后的中文文档也可通过 `head2field.resource_paths.read_packaged_text("docs", "zh/getting_started.md")` 读取。
+安装后，也可以通过
+`head2field.resource_paths.read_packaged_text("docs", "zh/getting_started.md")`
+读取本指南。
 
 <a id="installation"></a>
 
@@ -19,29 +22,34 @@ python -m pip install ./head2field-0.1.0-py3-none-any.whl
 head2field-predict --help
 ```
 
-预处理和 FEM 流程需要安装 wheel 的可选 extra：
+需要预处理或生成 FEM 标签时，安装相应的附加依赖：
 
 ```bash
 python -m pip install './head2field-0.1.0-py3-none-any.whl[full]'
 ```
 
-`full` 增加 SciPy 和 h5py。SimNIBS/CHARM 4.6.0 单独安装，并应在执行预处理或 FEM 命令的 Python 环境中可用。源码目录中可执行 `python -m pip install '.[full]'`。外部头模型和求解器要求见[预处理](preprocessing.md)与[FEM 标签生成](fem_label_generation.md)。
+`full` 包含 SciPy 和 h5py。SimNIBS/CHARM 4.6.0 需要单独安装，并且与预处理或 FEM
+命令使用同一个 Python 环境。从源码安装时，执行 `python -m pip install '.[full]'`。
+详细要求见[预处理](preprocessing.md)和[FEM 标签生成](fem_label_generation.md)。
 
-基础安装支持 CPU 推理。使用 GPU 时，选择与 CUDA 驱动兼容的 PyTorch 安装，并在运行 Head2Field 的同一环境中检查：
+基础安装即可进行 CPU 推理。使用 GPU 时，安装与 CUDA 驱动兼容的 PyTorch，
+然后在运行 Head2Field 的环境中检查：
 
 ```bash
 python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
 ```
 
-CUDA 可用时选择 `--device cuda` 或 `--device cuda:0`。真实数据训练使用 CUDA FP16；下方合成训练检查使用 CPU FP32。
+CUDA 可用时，使用 `--device cuda` 或 `--device cuda:0`。真实数据训练使用 CUDA FP16；
+下方的小型训练示例在 CPU 上以 FP32 运行。
 
 <a id="prepare-inputs"></a>
 
 ## 准备输入
 
-推理读取包含 `prepared_subject_v1.json` 的被试目录。该目录还应包含预处理影像、电导率、GM/WM 查询点和 76 个电极的位置。文件结构、坐标和组织标签要求见[输入格式说明](input_contract.md)。
+推理读取包含 `prepared_subject_v1.json` 的被试目录，其中还需有预处理影像、电导率、
+GM/WM 查询点和标准 76 电极布局。文件结构、组织标签和坐标要求见[输入指南](input_contract.md)。
 
-从原始 T1 图像开始：
+从原始 T1 影像开始，可执行：
 
 ```bash
 head2field-prepare \
@@ -53,7 +61,9 @@ head2field-prepare \
   --prepared-output-dir prepared_subject
 ```
 
-`non_hcp_raw` 执行一次刚体配准，请检查生成的 QC 图。对于已经完成 ACPC 对齐与畸变校正的 HCP T1，选择 `hcp_acpc` 并省略 `--template`。每个输出目录都必须是新目录。配准模板由用户按适用条款提供。
+`non_hcp_raw` 进行一次刚体配准，使用结果前请检查 QC 图。对于已经完成 ACPC 对齐和
+畸变校正的 HCP T1，选择 `hcp_acpc` 并省略 `--template`。所有输出目录必须尚不存在。
+配准模板应按其适用的使用条款获取。
 
 <a id="predict-and-inspect-fields"></a>
 
@@ -66,9 +76,11 @@ head2field-predict \
   --device cpu
 ```
 
-命令在预测前验证 prepared 输入与模型权重，输出 `[75,Q,3]` float32 电场基底、查询坐标、电极对和清单。`Q` 是 prepared GM/WM 查询行数。每个 source→Oz 电场对应源 `+1 mA`、Oz `-1 mA`，分量为 world-RAS `[Ex,Ey,Ez]`，单位为 `V/m`。
+程序检查输入和权重后，写出 float32 `[75,Q,3]` 电场基底、查询坐标、电极对和 JSON 清单。
+`Q` 为 GM/WM 查询点数量。每个电场对应源电极 `+1 mA`、Oz `-1 mA`，
+向量分量为 world-RAS `[Ex,Ey,Ez]`，单位为 `V/m`。
 
-无需将整个数组加载到 RAM 即可读取：
+使用内存映射可以查看基底，无需将整个数组加载到 RAM：
 
 ```python
 import json
@@ -83,13 +95,15 @@ queries = np.load(output / "query_world_ras_mm.npy", allow_pickle=False)
 print(basis.shape, manifest["source_names"], queries.shape)
 ```
 
-请一同保留全部五个输出文件。通过清单的 `source_names` 解释电极轴，通过查询数组解释查询轴。电流组合、分块和 Python 推理见[推理说明](inference.md)。
+请将全部五个输出文件保存在一起。清单中的 `source_names` 给出电极轴的顺序，
+查询数组给出查询轴上各行对应的位置。电流组合、分块设置和 Python API 见[推理说明](inference.md)。
 
 <a id="configuration-files-after-wheel-installation"></a>
 
 ## wheel 安装后的配置文件
 
-预测自动选择内置权重与固定 v1 结构。训练与预检通过 `--config` 指定配置路径。源码目录已提供 `configs/`；仅安装 wheel 时，可将现有默认配置资源复制到工作目录：
+预测会自动加载内置权重和与其匹配的模型结构。训练和预检读取 `--config` 指定的配置文件。
+源码目录中已提供 `configs/`；如果只安装了 wheel，先将内置默认配置复制到工作目录：
 
 ```python
 from pathlib import Path
@@ -103,13 +117,14 @@ for name in CONFIG_FILES:
         file.write(read_packaged_text("configs", name))
 ```
 
-在新工作目录中执行一次即可。独占创建文件可保护已有本地配置。这些文件是随包分发的默认配置副本，不根据机器或输入数据推断设置。
+在新的工作目录中运行一次即可。示例遇到同名配置文件时会停止，不会覆盖已有配置；
+复制出的文件与随包提供的默认配置相同，不会按本机或输入数据调整参数。
 
 <a id="small-cpu-training-check"></a>
 
 ## 小型 CPU 训练检查
 
-准备好默认配置文件后执行：
+准备好配置文件后执行：
 
 ```bash
 head2field-make-synthetic-training --output-dir generated/synthetic-training
@@ -124,7 +139,9 @@ head2field-train \
   --output-dir generated/synthetic-run
 ```
 
-检查使用 8³ 测试模型和解析数据，包含一个虚构训练被试和一个虚构验证被试，用于检查训练机制，不测量预训练模型精度。真实数据准备、训练和恢复见[训练说明](training.md)。
+示例使用 8³ 测试模型和解析数据，包含一个虚构训练被试和一个虚构验证被试，
+用于检查训练流程能否运行，不用于评估预训练模型精度。
+真实数据训练和断点恢复见[训练说明](training.md)。
 
 <a id="common-setup-issues"></a>
 
@@ -132,12 +149,13 @@ head2field-train \
 
 | 现象 | 检查或处理 |
 | --- | --- |
-| 无法找到 `head2field-predict` | 激活安装软件时使用的环境；`python -m head2field.cli --help` 使用同一预测解析器。 |
-| 缺少 `configs/training_smoke_v1.json` | 按上方示例复制内置配置，或在源码目录运行。 |
-| 输出目录已存在 | 选择新目录，命令会保留已有结果。 |
-| prepared subject 数组或坐标验证失败 | 核对输入清单与原始引用文件，参见输入格式说明。 |
-| CUDA 不可用 | 检查活动环境的 PyTorch 构建与驱动；推理可选择 CPU。 |
-| GPU 显存不足 | 先减小 `--query-chunk-size`，再减小 `--electrode-batch-size`；电极对与查询顺序保持固定。 |
-| 自定义权重严格验证失败 | 使用参数名及形状正确的裸 FP32 v1 state dictionary，参见权重格式。 |
+| 无法找到 `head2field-predict` | 激活安装软件时使用的环境；`python -m head2field.cli --help` 可打开同一预测命令。 |
+| 缺少 `configs/training_smoke_v1.json` | 按上方示例复制内置默认配置，或从源码目录运行。 |
+| 输出目录已存在 | 选择新目录，程序不会覆盖已有结果。 |
+| 输入或坐标检查失败 | 按输入指南核对 `prepared_subject_v1.json` 及其引用文件。 |
+| CUDA 不可用 | 检查当前环境中的 PyTorch 和驱动，或使用 CPU 推理。 |
+| GPU 显存不足 | 先减小 `--query-chunk-size`，再减小 `--electrode-batch-size`；电极和查询点顺序不变。 |
+| 自定义权重检查失败 | 使用参数名和形状符合 v1 模型要求、仅含模型参数的 FP32 权重文件。 |
 
-预训练校验值和自定义权重见[权重说明](../../weights/README_zh.md)；实现结构见[代码阅读指南](code_guide.md)。
+权重校验值和自定义权重加载见[权重说明](../../weights/README_zh.md)，
+实现细节见[代码阅读指南](code_guide.md)。

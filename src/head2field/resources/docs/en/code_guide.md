@@ -2,11 +2,12 @@
 
 [English](code_guide.md) · [简体中文](../zh/code_guide.md)
 
-Start with [`_spec.py`](../../src/head2field/_spec.py) for the fixed v1 factory,
-[`inputs.py`](../../src/head2field/inputs.py) for tensor construction, and
-[`inference.py`](../../src/head2field/inference.py) for the prediction flow. The
-assembled network is in [`model.py`](../../src/head2field/model.py). All four files
-use the same coordinate conventions, electrode order, and query-row indices.
+To follow a prediction through the code, read the model factory in
+[`_spec.py`](../../src/head2field/_spec.py), tensor construction in
+[`inputs.py`](../../src/head2field/inputs.py), and the inference workflow in
+[`inference.py`](../../src/head2field/inference.py). The network itself is in
+[`model.py`](../../src/head2field/model.py). Coordinates, electrode order, and
+query-row indices have the same meaning throughout these files.
 
 ## Package map
 
@@ -23,10 +24,10 @@ use the same coordinate conventions, electrode order, and query-row indices.
 | `training/` | Dataset and cache formats, loss statistics, physics pools, training and resume |
 | `resource_paths.py` | Allowlisted configuration, schema, documentation, and weight resources |
 
-The top-level package exports `Head2FieldV1`, `create_head2field_v1`,
+The top-level API provides `Head2FieldV1`, `create_head2field_v1`,
 `load_head2field_v1_weights`, and `Head2FieldInferenceSession`. Preprocessing,
-FEM, and training execution are reached through their own submodules;
-optional solver and scientific I/O dependencies are loaded where needed.
+FEM, and training have separate submodules. Solver and scientific I/O
+dependencies load only when the corresponding feature is called.
 
 ## Prediction flow
 
@@ -43,24 +44,26 @@ flowchart LR
     E --> O[Write arrays and manifest]
 ```
 
-`predict_prepared_subject_v1()` coordinates the file workflow. The session
-holds immutable inputs, evaluates the model in inference mode, and caches the
-head FPN, global subject context, electrode tokens, and a bounded number of
-query contexts. A new query chunk reuses the head and electrode encodings.
+`predict_prepared_subject_v1()` reads the prepared subject and writes prediction
+files. Its session holds fixed inputs and runs the model in inference mode.
+The head FPN, global subject context, electrode tokens, and a limited number
+of query contexts are cached, so each new query chunk can reuse the head and
+electrode encodings.
 
-Each pair batch remaps its source/reference indices to a compact electrode
-bank before decoding. Repeated references share a token and response inside
-that batch. First-occurrence bank order and requested pair order are retained.
-This reduces decoder memory use while preserving the requested pair order.
+For each pair batch, the decoder builds a compact bank containing only the
+electrodes that batch needs. Pairs with a shared reference reuse its token and
+response. The bank keeps first-occurrence order, and the output keeps the
+requested pair order. This reduces decoder memory use.
 
-Create a new session when changing the subject or model weights. Cached tensors
-are computed values and are not refreshed by mutating the original inputs.
+Create a new session for a different subject or different weights. Changing
+the original inputs does not update values already cached by a session.
 
 ## Tensor and coordinate notation
 
-`B` means subjects, `U` unique electrodes, `P` pairs, `Q` queries, and `C`
-feature channels. The file-oriented v1 inference workflow uses `B=1`, `U=76`,
-and `P=75`; lower-level bundles also support selected or repeated pairs.
+In the shapes below, `B` is the number of subjects, `U` unique electrodes,
+`P` electrode pairs, `Q` query points, and `C` feature channels. Prediction
+from a prepared-subject directory uses `B=1`, `U=76`, and `P=75`. Lower-level
+bundles can also contain selected or repeated pairs.
 
 | Value | Shape | Meaning |
 | --- | --- | --- |
@@ -75,19 +78,19 @@ and `P=75`; lower-level bundles also support selected or repeated pairs.
 | Pair fields | `[B,P,Q,3]` | `G(source)-G(reference)` in world-RAS |
 | Saved prediction | `[75,Q,3]` | Single-subject pair fields in V/m for the 1 mA convention |
 
-Normalized coordinates use `2 * ijk / (shape - 1) - 1`, matching
-`align_corners=True`. The 128-cube encoder preserves the physical bounds of
-the 256-cube grid. `sample_volume_at_points()` reverses i/j/k to k/j/i because
-PyTorch's sampling grid addresses W/H/D. Affine calculations keep their original
-precision even when network execution uses autocast.
+Coordinates are normalized with `2 * ijk / (shape - 1) - 1`, matching
+`align_corners=True`. The 128-cube encoder input covers the same physical
+bounds as the 256-cube grid. `sample_volume_at_points()` reverses i/j/k to
+k/j/i to match PyTorch's W/H/D sampling order. Affine calculations retain
+their original precision when the network uses autocast.
 
-The anatomy origin is the mean GM/WM query location. Relative coordinate
-features use this origin; absolute coordinate branches receive the controlled
-augmentation selected for the current data or physics branch.
+Relative coordinates use the mean GM/WM query location as their origin.
+The absolute-coordinate branches use the augmentation settings of the current
+data or physics branch.
 
 ## Reading the network
 
-Within `model.py`, follow these stages:
+Read `model.py` in the following order:
 
 1. `SubjectGeometry`, `QueryCoordinateBundle`, and `ElectrodeCoordinateBundle`
    store electrode/query indices and validate coordinate transforms.
@@ -101,17 +104,16 @@ Within `model.py`, follow these stages:
 5. `forward_bundled()` evaluates one branch.
    `forward_data_and_physics()` shares the head encoding across two branches.
 
-Shared-response subtraction gives antisymmetric and additive pair fields.
-At any query point, adding the same vector to every electrode response leaves
-the differences unchanged. Supervision and physical losses therefore act on
-pair fields. Architecture settings are listed in
-[model architecture](model_architecture.md).
+Subtracting shared responses gives antisymmetric and additive pair fields.
+Adding the same vector to all electrode responses at one query point leaves
+their differences unchanged, so supervision and physics losses act on pair
+fields. Network settings are described in [model architecture](model_architecture.md).
 
 ## Reading the training path
 
-[`training/cli.py`](../../src/head2field/training/cli.py) validates the execution
-profile and constructs the dataset, complete-epoch sampler, training run settings,
-step function, and runner. The responsibilities are:
+[`training/cli.py`](../../src/head2field/training/cli.py) checks the execution
+configuration, then creates the dataset, complete-epoch sampler, run settings,
+step function, and runner. The main files are:
 
 | File | Responsibility |
 | --- | --- |
@@ -126,32 +128,33 @@ step function, and runner. The responsibilities are:
 | `validation.py` | Deterministic validation and final test evaluation |
 | `state.py` | Complete local resume state and independent RNG streams |
 
-The data branch uses named augmentation and dropout generators. The physics
-branch uses unaugmented coordinates and does not use the data RNG. Operator validity
-masks and calibration remain fixed from prepared FEM data. Global, radial,
-and high-field loss denominators describe the complete subject fields; query
-chunks only contribute their error numerators. Huber, MAE, and relative L2 in
-the supervised-loss metrics are diagnostics.
+Separate random-number generators control augmentation and dropout in the data
+branch. The physics branch uses unaugmented coordinates and does not consume
+the data generator. Its valid samples and calibration come from prepared FEM
+data and remain fixed.
+
+Global, radial, and high-field denominators are computed from each subject's
+complete fields. A query chunk contributes only its error numerator. The
+supervised-loss output also reports Huber, MAE, and relative L2 as diagnostics.
 
 See [training](training.md) for runnable commands and checkpoint contents.
 
 ## Editing and verification
 
-Keep parameter names/shapes, input transforms, source/query order, coordinate
-frames, units, and default parameters consistent. Model factory changes affect
-the pretrained-weight schema; a model version change needs its corresponding
-factory, configuration, and loader. Package and data-schema versions are
-tracked independently.
+When changing code, check parameter names and shapes, input processing,
+source/query order, coordinate frames, units, and default settings. A change
+to the model factory can affect weight compatibility; a new model version
+needs a matching factory, configuration, and loader. Package and data-format
+versions are managed separately.
 
-For a readability refactor, use the existing small-model tests and compare the
-same inputs before and after. Changes to source/query indexing need checks for
-reordering, repeated IDs, shared references, and partial chunks. Loss changes
-need value and gradient comparisons. See [CONTRIBUTING.md](../CONTRIBUTING.md)
-for development commands and focused verification.
+For a readability refactor, compare the same inputs before and after using
+the existing small-model tests. If source or query indexing changes, include
+reordering, repeated IDs, shared references, and partial chunks. If a loss
+changes, compare both values and gradients. Development commands are in
+[CONTRIBUTING.md](../CONTRIBUTING.md).
 
-Public API names and CLI help use English; new source comments and docstrings
-use Chinese. Keep every English guide aligned with its Chinese companion,
-including commands and scientific settings.
-After updating a shipped document, synchronize its copy in
-`src/head2field/resources/`; existing packaging tests verify the copies byte
-for byte.
+Use English for public API names and CLI help, and Chinese for new source
+comments and docstrings. Keep the English and Chinese guides consistent,
+including commands and scientific settings. When editing a shipped document,
+update its copy in `src/head2field/resources/` too; the packaging tests compare
+these copies byte for byte.

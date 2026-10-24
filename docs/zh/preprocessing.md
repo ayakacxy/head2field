@@ -4,7 +4,9 @@
 
 [English](../en/preprocessing.md) · [简体中文](preprocessing.md)
 
-预处理依次完成 T1 对齐与重采样、CHARM 头模型生成和输入文件整理，输出可供推理和训练使用的被试数据目录。请在运行命令的 Python 环境中安装 `preprocess` 可选依赖和 SimNIBS 4.6.0；T1 影像和方向模板由用户提供。
+T1 预处理分为三步：对齐与重采样、生成 CHARM 头模型、整理模型输入。
+请在运行命令的环境中安装 `preprocess` 可选依赖和 SimNIBS 4.6.0。
+T1 影像由用户准备；处理非 HCP 原始数据时，还需要方向模板。
 
 <a id="end-to-end-command"></a>
 
@@ -20,20 +22,23 @@ head2field-prepare \
   --prepared-output-dir prepared_subject
 ```
 
-三个输出路径必须是尚不存在、互不相同且不互相嵌套的目录，不提供覆盖选项。后续阶段失败时保留已完成阶段的结果，不删除或重写用户已有输出。
+三个输出目录必须尚不存在、互不相同，且不能相互嵌套。命令不提供覆盖选项。
+某个阶段失败时，已完成阶段的结果会保留，用户原有的结果不会被删除或替换。
 
-同一流程也可通过 `head2field.preprocessing.prepare_subject` 调用。
+Python 入口为 `head2field.preprocessing.prepare_subject`。
 
 <a id="stage-1-canonical-t1"></a>
 
 ## 阶段 1：T1 对齐与重采样
 
-可选择以下两种处理方式：
+根据输入影像选择处理方式：
 
-- `hcp_acpc` 假定 ACPC 对齐与畸变校正已完成，不估计旋转，仅将头部居中并重采样到固定网格。
-- `non_hcp_raw` 需要用户提供方向模板，进行一次六自由度刚体配准，不进行缩放或剪切。
+- `hcp_acpc`：用于已完成 ACPC 对齐和畸变校正的数据，只将头部居中并重采样，不估计旋转。
+- `non_hcp_raw`：用于原始 T1，需要提供方向模板，进行一次六自由度刚体配准；不接受缩放或剪切。
 
-两者均输出 float32、256 x 256 x 256、1 mm、RAS T1，仿射平移为 `[-128, -128, -128]`，并生成 QC PNG 和隐去路径信息的清单。底层命令为：
+两种方式都输出 float32、256 x 256 x 256、1 mm、RAS T1，仿射平移为
+`[-128, -128, -128]`，并生成 QC PNG 和隐去路径信息的清单。
+单独使用对齐与重采样功能时，可先查看：
 
 ```bash
 python -m head2field.preprocessing canonicalize --help
@@ -43,44 +48,60 @@ python -m head2field.preprocessing canonicalize --help
 
 ## 阶段 2：外部 CHARM
 
-默认 adapter 从用户环境导入 SimNIBS 4.6.0，调用 `simnibs.segmentation.charm_main.run`。版本不匹配或运行时缺失时直接报错，不采用替代分割。CHARM 使用外部安装中的资源；包内不复制其运行时或图谱。
+Head2Field 调用已安装 SimNIBS 4.6.0 中的 `simnibs.segmentation.charm_main.run`。
+未安装 SimNIBS 或版本不符时，程序会停止。CHARM 使用自身安装目录中的资源；
+Head2Field 不附带 CHARM 运行环境或图谱，也不以其他分割方法替代。
 
-CHARM 先在同级临时目录中生成头模型。完成后，程序检查以下文件和版本信息，再保存到目标目录：
+CHARM 先写入目标目录旁的临时目录。结果保存到目标位置前，Head2Field 会检查：
 
-- 位于头模型目录之外的预处理 T1；
-- 头模型目录内 CHARM 自身的 `T1.nii.gz` 和 `final_tissues.nii.gz`；
-- 根目录唯一的 `*.msh` 头网格；
-- SimNIBS 版本为 `4.6.0`。
+- 从头模型目录外传入的预处理 T1；
+- CHARM 目录中的 `T1.nii.gz` 和 `final_tissues.nii.gz`；
+- 目录根层唯一的 `*.msh` 头网格；
+- 已安装的 SimNIBS 版本为 `4.6.0`。
 
-`charm_runtime_v1.json` 记录该次运行的 T1、组织图、唯一头网格和 SimNIBS 版本。组装与 FEM 命令通过此记录检查输入是否来自同一个头模型。
+`charm_runtime_v1.json` 记录这些影像、头网格和软件版本。
+后续整理输入和运行 FEM 时，程序用该记录确认文件来自同一个头模型。
 
-头模型目录保留 CHARM 的完整输出；推理使用的预处理数据保存在另一个目录。
+请在头模型目录中保留完整 CHARM 输出。下一步会另建一个较小的被试目录，存放模型输入。
 
 <a id="stage-3-prepared-subject-assembly"></a>
 
 ## 阶段 3：整理模型输入文件
 
-这一步使用预处理 T1、`final_tissues.nii.gz` 和 CHARM 头模型目录。程序通过 `charm_runtime_v1.json` 检查这些文件是否来自同一次头模型生成。
+这一步读取预处理 T1、`final_tissues.nii.gz` 和 CHARM 头模型目录，
+先根据 `charm_runtime_v1.json` 检查文件是否对应。
 
-电极位置默认从 `eeg_positions/EEG10-10_UI_Jurak_2007.csv` 读取。文件必须包含标准的 76 个电极名称；坐标不能含 NaN 或 Inf，输出按固定顺序排列，Oz 位于第一行。通常无需另外准备电极文件。需要自定义输入时，必须同时提供 `--electrode-names-json` 和 `--electrode-coords-mm-npy`，并满足相同的名称与坐标要求。随后执行：
+电极位置默认读取自 `eeg_positions/EEG10-10_UI_Jurak_2007.csv`。
+文件必须包含标准 76 个电极名称和有限的 world-RAS 坐标。
+输出采用固定顺序，Oz 位于第一行。自行提供电极文件时，必须同时传入
+`--electrode-names-json` 和 `--electrode-coords-mm-npy`，并满足相同要求。
+
+随后，程序依次完成：
 
 1. 检查影像网格、affine 和组织标签。
-2. 复制准备后的 T1 与组织图，生成 float32 标量电导率。
-3. 按 C-order 保存 GM/WM 查询点，并保存电极名称和坐标。
-4. 写入并验证 prepared 清单，检查来源文件未改变，将临时目录保存为目标目录。
+2. 复制预处理 T1 与组织图，并生成 float32 标量电导率。
+3. 按 C-order 保存 GM/WM 体素查询点，以及排序后的电极文件。
+4. 写入并检查输入清单，确认来源文件未变，将完整被试目录保存到目标位置。
 
-被试数据目录只复制预处理 T1 和组织图，网格仍保存在 CHARM 头模型目录中。运行 FEM 时，请传入该头模型目录下唯一的网格文件；程序会将它与 `charm_runtime_v1.json` 和输入清单中的 `head_model_provenance` 记录进行比较。
+被试目录包含预处理 T1 和组织图的副本，不包含头网格。
+规划或运行 FEM 时，请传入同一个 CHARM 目录中的唯一网格。
+程序会将其与 `charm_runtime_v1.json` 和输入清单中的 `head_model_provenance` 记录核对。
 
-底层 API 为 `head2field.preprocessing.assemble_prepared_subject`。
+底层 Python 函数为 `head2field.preprocessing.assemble_prepared_subject`。
 
 <a id="small-public-inputs"></a>
 
 ## 合成示例
 
-示例与测试可调用 `head2field.preprocessing.synthetic.write_synthetic_preparation_inputs`。该函数生成固定的 32³ 椭球 T1、第二张方向图，以及固定 76 名称对应的合成球面坐标。这些数据只用于软件测试，不能用来评估真实头模型或 FEM 的精度。
+示例和软件测试可以调用
+`head2field.preprocessing.synthetic.write_synthetic_preparation_inputs`，
+生成固定的 32³ 椭球 T1、方向图和标准 76 个电极名称对应的合成球面坐标。
+这些非解剖数据用于检查软件运行，不用于测量头模型或 FEM 精度。
 
 <a id="validation-boundary"></a>
 
 ## 测试说明
 
-合成测试检查处理方式选择、刚体配准调用、查询点顺序、输入文件是否被改动，以及清单内容是否与文件一致。测试还会确认程序失败时保留已有结果，并且不覆盖输出。实际 CHARM 分割需要另外运行，并记录使用的 SimNIBS 版本。
+合成测试覆盖处理方式选择、刚体配准调用、查询点顺序、输入文件保护、清单与文件的一致性，
+也检查阶段失败时能否保留已有结果，以及程序是否拒绝覆盖输出。
+评估 CHARM 分割时，应另用真实被试运行，并记录 SimNIBS 版本。

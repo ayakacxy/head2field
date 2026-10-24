@@ -18,10 +18,10 @@
 
 </div>
 
-Head2Field predicts a reusable, multi-electrode electric-field basis from
-T1-derived head anatomy, tissue conductivity, and electrode coordinates.
-Shared electrode responses support field synthesis across current patterns
-without montage-specific retraining.
+Head2Field predicts subject-specific electric fields for transcranial electrical
+stimulation. It uses T1-derived head anatomy, tissue conductivity, and electrode
+coordinates to build a reusable field basis. You can then combine these fields
+with different electrode currents without retraining the model for each montage.
 
 <div align="center">
 
@@ -41,19 +41,21 @@ and shared-response differences. Click the figure for the vector PDF.
 
 ## 📄 Paper
 
-This repository is the **official implementation** of the manuscript:
+This repository contains the **official PyTorch implementation** of:
 
 > **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
 > Transcranial Electrical Stimulation Lead-Field Prediction from Structural
 > MRI**
 
-The current model is **Head2Field v1** (`Head2FieldV1`), configured in
-[head2field_v1.json](configs/head2field_v1.json). The PyTorch implementation
-covers preprocessing, FEM supervision, training, and inference.
-Its output is a `[75, Q, 3]` basis at GM/WM query locations:
-75 source-to-Oz maps, world-RAS `[Ex, Ey, Ez]`, in `V/m` for source `+1 mA`
-and Oz `-1 mA`. See the [model card](docs/MODEL_CARD.md) for research use,
-assumptions, and limitations.
+The package includes **Head2Field v1** (`Head2FieldV1`), pretrained weights, and
+commands for preprocessing, FEM label generation, training, and inference. The
+model configuration is [head2field_v1.json](configs/head2field_v1.json).
+
+For each subject, the model predicts 75 source-to-Oz fields at `Q` gray- and
+white-matter query locations. The output has shape `[75, Q, 3]`, with world-RAS
+components `[Ex, Ey, Ez]` in `V/m`. Each field corresponds to `+1 mA` at the source
+and `-1 mA` at Oz. The [model card](docs/MODEL_CARD.md) describes the training
+settings, intended use, and limitations.
 
 ## ✨ Features
 
@@ -68,9 +70,9 @@ assumptions, and limitations.
 
 ## 🚀 Installation
 
-Use Python 3.11 or newer. Download the wheel from
-[Release v0.1.0](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0),
-which includes the pretrained Head2Field v1 weights, and install it:
+Use Python 3.11 or newer. Download the wheel, including the pretrained weights,
+from [Release v0.1.0](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0)
+and install it:
 
 ```bash
 python -m pip install head2field-0.1.0-py3-none-any.whl
@@ -98,13 +100,14 @@ python -m pip install '.[training]'
 python -m pip install '.[full]'
 ```
 
-Install SimNIBS/CHARM **4.6.0** separately for preprocessing and FEM labels.
-Real-data training requires CUDA-enabled PyTorch. The `training` extra marks
-that workflow; its Python dependencies are already in the base installation.
-The `full` extra adds SciPy and h5py.
+Preprocessing and FEM label generation also need a separate installation of
+SimNIBS/CHARM **4.6.0**. Real-data training needs CUDA-enabled PyTorch. The
+`training` extra is a convenience name for the training workflow; its Python
+dependencies are already included in the base package. The `full` extra adds
+SciPy and h5py.
 
-The [getting-started guide](docs/en/getting_started.md) covers the complete installed
-workflow, CUDA checks, bundled configuration access, and common setup issues.
+See [getting started](docs/en/getting_started.md) for CUDA setup, copying the
+bundled configuration files, and troubleshooting installation.
 
 <a id="quick-start"></a>
 
@@ -112,8 +115,8 @@ workflow, CUDA checks, bundled configuration access, and common setup issues.
 
 ### Predict lead fields
 
-Supply a [prepared subject](docs/en/input_contract.md). The command loads the
-[bundled pretrained v1 weights](weights/README.md) automatically.
+Start with a [prepared subject directory](docs/en/input_contract.md). The command
+uses the [bundled pretrained weights](weights/README.md) by default:
 
 ```bash
 head2field-predict \
@@ -122,12 +125,11 @@ head2field-predict \
   --device cpu
 ```
 
-Use `--device cuda` for GPU inference. The output includes
-`lead_field_float32.npy` with shape `[75, Q, 3]`, exact query coordinates,
-electrode-pair records, and a manifest with input/output metadata. Vector
-components are `[Ex, Ey, Ez]` in world-RAS; field values are in `V/m` under the
-fixed 1 mA current convention. See [inference](docs/en/inference.md) for chunking
-and the Python API.
+Set `--device cuda` to use a GPU. The output directory contains
+`lead_field_float32.npy` (`[75, Q, 3]`), the query coordinates and electrode-pair
+records, and a manifest describing the inputs and outputs. The fields use the
+world-RAS components and 1 mA convention described above. See
+[inference](docs/en/inference.md) for query chunking and the Python API.
 
 Use `--weights /path/to/custom_v1.pth` to select your own compatible weights.
 
@@ -143,19 +145,20 @@ head2field-prepare \
   --prepared-output-dir prepared_subject
 ```
 
-`non_hcp_raw` performs one 6-DOF rigid alignment; inspect its QC image before
-using the prepared subject. For an already ACPC-aligned, distortion-corrected
-HCP input, use `hcp_acpc`, which skips rigid estimation. All generated output
-directories must be new. See [preprocessing](docs/en/preprocessing.md).
+Use `non_hcp_raw` for an unaligned T1 image. It performs one 6-DOF rigid
+alignment; inspect the QC image before using the result. For HCP images that
+already have ACPC alignment and distortion correction, use `hcp_acpc` and omit
+`--template` to skip rigid estimation. Choose new paths for all output directories. The
+[preprocessing guide](docs/en/preprocessing.md) explains both profiles.
 
 ### Check the training installation with synthetic data
 
-The following example runs a small CPU FP32 model without participant data or
-SimNIBS.
+This example runs a small CPU FP32 training job. It needs neither participant
+data nor SimNIBS.
 
-The commands use the checkout's `configs/` files. After a wheel-only install,
-[copy the bundled defaults](docs/en/getting_started.md#configuration-files-after-wheel-installation)
-into your working directory first.
+Run the commands from the source checkout, or
+[copy the bundled configuration files](docs/en/getting_started.md#configuration-files-after-wheel-installation)
+into your working directory after installing the wheel.
 
 ```bash
 head2field-make-synthetic-training --output-dir generated/synthetic-training
@@ -170,22 +173,25 @@ head2field-train \
   --output-dir generated/synthetic-run
 ```
 
-These analytic, non-anatomical inputs check software operation. They do not
-measure prediction accuracy. More examples are in [examples](examples/README.md).
+The generated arrays are useful for checking that training runs, but they do
+not represent head anatomy or measure prediction accuracy. See
+[examples](examples/README.md) for the available checks.
 
 <a id="reproduction"></a>
 
 ## 🧪 Training and evaluation
 
-The default [training_v1.json](configs/training_v1.json) uses
-AdamW (`2e-4`, weight decay `1e-4`), CUDA FP16, eight source pairs and 49,152
-queries per step. Complete epochs use a maximum 25-epoch cosine schedule,
-epoch-end validation, and five-epoch early stopping. The validation-best model
-is selected for testing.
+To train on real data, first prepare the subject inputs and FEM labels. The
+default [training_v1.json](configs/training_v1.json) uses AdamW with learning
+rate `2e-4` and weight decay `1e-4`, CUDA FP16, eight source pairs and 49,152
+queries per step. It trains complete epochs for up to 25 epochs, with a
+25-epoch cosine schedule and validation at the end of each epoch. Training
+stops after five epochs without improvement; testing uses the best validation
+checkpoint. The data loss uses 50/100 mm radial regions.
 
-The data objective uses 50/100 mm radial regions. [Training and resume](docs/en/training.md)
-covers dataset preparation and checkpoints; [evaluation and reproducibility](docs/en/paper_reproduction.md)
-describes data splits, field comparisons, and timing methods. Participant
+Follow [training and resume](docs/en/training.md) for data preparation and
+checkpoint handling. [Evaluation and reproducibility](docs/en/paper_reproduction.md)
+explains the data splits, FEM comparisons, and runtime measurements. Participant
 data and cohort splits are obtained separately.
 
 <a id="documentation"></a>
@@ -207,15 +213,14 @@ data and cohort splits are obtained separately.
 
 ## 🤝 Contributing
 
-See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for development and verification,
-[implementation and dependencies](docs/SOURCE_PROVENANCE.md) for the package structure, and
-[CHANGELOG.md](docs/CHANGELOG.md) for changes. Synthetic examples check software
-behavior; model comparisons require appropriate data, weights,
-and evaluation metrics. Maintainers can use the [release checklist](docs/RELEASE_CHECKLIST.md).
+See [Contributing](docs/CONTRIBUTING.md) for development setup and choosing
+checks for a change. The [code and dependency overview](docs/SOURCE_PROVENANCE.md)
+describes the package components, and the [changelog](docs/CHANGELOG.md) records
+software changes. Maintainers can follow the [release checklist](docs/RELEASE_CHECKLIST.md)
+when preparing a distribution.
 
-Public API names and CLI help use English; new source comments and docstrings
-use Chinese. All public guides have English and Simplified Chinese versions,
-with a language switch on each page.
+Documentation is available in English and Simplified Chinese. Use the language
+link at the top of a guide to switch between them.
 
 <a id="citation"></a>
 
@@ -239,10 +244,9 @@ If you use Head2Field in research, cite the manuscript with this BibTeX entry:
 }
 ```
 
-The title and author order match [CITATION.cff](CITATION.cff). Publication year,
-journal, and DOI are not yet recorded there. See the
-[citation guide](docs/CITATION_GUIDE.md) for software citation and the relevant methods
-and data sources.
+The manuscript title and author order follow [CITATION.cff](CITATION.cff). See
+the [citation guide](docs/CITATION_GUIDE.md) for software citation and references
+for the methods and data sources.
 
 Model development benefited from WU-Minn Human Connectome Project data;
 [DATA_USE.md](docs/DATA_USE.md) provides the acknowledgement and citation requirements.

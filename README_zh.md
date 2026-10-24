@@ -22,8 +22,8 @@
 
 </div>
 
-Head2Field 利用 T1 MRI、组织电导率和电极坐标预测多电极先导场。
-预测得到的电场基底可以按电流系数组合，计算不同刺激方案的电场，无需重新训练模型。
+Head2Field 根据 T1 MRI 提取的头部结构、组织电导率和电极坐标，预测个体的多电极先导场。
+得到电场基底后，只需改变各电极的电流系数，就能计算不同刺激方案的电场，无需为每种方案重新训练。
 
 ## 📚 目录
 
@@ -41,17 +41,17 @@ Head2Field 利用 T1 MRI、组织电导率和电极坐标预测多电极先导�
 
 中文参考译名：**Head2Field：从结构 MRI 预测个体特异性多电极 tES 先导场的连续神经场**。
 
-当前模型为 **Head2Field v1**（`Head2FieldV1`），模型配置见
-[head2field_v1.json](configs/head2field_v1.json)，Python 包名为 `head2field`。
-训练的数据划分、FEM 对比和运行时间测量见[评估与可重复实验](docs/zh/paper_reproduction.md)。
+安装包提供 **Head2Field v1**（`Head2FieldV1`）、预训练权重，以及预处理、FEM 标签生成、训练和推理命令。
+模型配置见 [head2field_v1.json](configs/head2field_v1.json)，Python 包名为 `head2field`。
+数据划分、FEM 对比和计时方法见[评估与可重复实验](docs/zh/paper_reproduction.md)。
 
 <a id="features"></a>
 
 ## 🧩 主要功能
 
-项目提供基于 PyTorch 的预处理、FEM 标签生成、物理引导训练和推理流程。v1 模型输出
-75 个 source→Oz 电场图，向量分量采用 world-RAS 坐标；每个电场图对应源电极 `+1 mA`、
-Oz `-1 mA`。本项目用于非临床科研；适用条件与限制见[模型说明](docs/MODEL_CARD_zh.md)。
+模型在灰质和白质的 `Q` 个查询位置输出 75 个源电极到 Oz 的电场，数组形状为 `[75, Q, 3]`。
+向量分量按 world-RAS `[Ex, Ey, Ez]` 排列，单位为 `V/m`；每个电场对应源电极 `+1 mA`、
+Oz `-1 mA`。模型用于非临床科研，训练设置、适用条件与限制见[模型说明](docs/MODEL_CARD_zh.md)。
 
 | 工作流程 | 功能 | 依赖 |
 | --- | --- | --- |
@@ -64,7 +64,8 @@ Oz `-1 mA`。本项目用于非临床科研；适用条件与限制见[模型说
 
 ## 🐍 安装
 
-要求 Python 3.11 或更新版本。从 [Release v0.1.0](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0) 下载 wheel；其中已包含预训练 Head2Field v1 权重，安装后即可用于推理：
+使用 Python 3.11 或更新版本。从 [Release v0.1.0](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0) 下载 wheel，
+其中已包含预训练权重，然后安装：
 
 ```bash
 python -m pip install head2field-0.1.0-py3-none-any.whl
@@ -92,9 +93,9 @@ python -m pip install '.[training]'
 python -m pip install '.[full]'
 ```
 
-真实数据训练需要 CUDA 版 PyTorch。SimNIBS/CHARM 需单独安装，预处理与 FEM adapter 要求
-当前环境中的 SimNIBS 版本为 **4.6.0**。`training` extra 作为流程标识保留，其 Python 依赖
-已包含在基础安装中；`full` extra 加入预处理和 FEM 所需的 SciPy 与 h5py。
+预处理和 FEM 标签生成还需要单独安装 SimNIBS/CHARM **4.6.0**，真实数据训练需要 CUDA 版 PyTorch。
+`training` 是便于选择训练流程的可选依赖名称，所需的 Python 包已经包含在基础安装中；
+`full` 则额外安装 SciPy 和 h5py。
 
 从安装到推理的完整步骤、CUDA 检查、内置配置获取和常见问题见
 [上手指南](docs/zh/getting_started.md)。
@@ -105,8 +106,8 @@ python -m pip install '.[full]'
 
 ### 预测先导场
 
-先准备预处理后的被试数据，所需文件和坐标要求见[输入格式说明](docs/zh/input_contract.md)。
-命令会自动加载[内置的预训练 v1 模型权重](weights/README_zh.md)，无需单独下载权重。
+先准备好[被试输入目录](docs/zh/input_contract.md)。以下命令默认加载
+[安装包内的预训练权重](weights/README_zh.md)：
 
 ```bash
 head2field-predict \
@@ -115,10 +116,9 @@ head2field-predict \
   --device cpu
 ```
 
-GPU 推理可使用 `--device cuda`。输出包含形状为 `[75, Q, 3]` 的
-`lead_field_float32.npy`、精确查询坐标、电极对记录，以及包含输入输出元数据的 manifest。
-向量分量为 world-RAS `[Ex, Ey, Ez]`，电场在固定 1 mA 电流约定下以 `V/m` 表示。
-分块设置与 Python API 见[推理说明](docs/zh/inference.md)。
+使用 GPU 时设为 `--device cuda`。输出目录包含 `lead_field_float32.npy`（`[75, Q, 3]`）、
+查询坐标、电极对记录，以及描述输入输出的清单文件。电场采用上文的 world-RAS 分量和 1 mA 电流约定。
+查询分块和 Python API 的用法见[推理说明](docs/zh/inference.md)。
 
 使用自定义权重时，加上 `--weights /path/to/custom_v1.pth`。
 
@@ -134,17 +134,17 @@ head2field-prepare \
   --prepared-output-dir prepared_subject
 ```
 
-`non_hcp_raw` 执行一次 6-DOF 刚体配准，使用前需检查 QC 图。对于已经完成 ACPC 对齐和畸变
-校正的 HCP 输入，使用 `hcp_acpc`，该流程跳过刚体估计。所有输出目录必须尚不存在。
-详细说明见[预处理](docs/zh/preprocessing.md)。
+未对齐的原始 T1 使用 `non_hcp_raw`，它会执行一次 6-DOF 刚体配准；使用结果前请检查 QC 图。
+已完成 ACPC 对齐和畸变校正的 HCP 输入使用 `hcp_acpc`，并省略示例中的 `--template`，跳过刚体估计。
+各输出目录都应选择尚不存在的新路径。两种流程的详细步骤见[预处理](docs/zh/preprocessing.md)。
 
 ### 用合成数据验证训练安装
 
-下面的例子使用小型 CPU FP32 模型，不需要参与者数据或 SimNIBS。
+这个例子在 CPU 上以 FP32 运行一次小型训练，不需要参与者数据或 SimNIBS。
 
-命令使用源码目录中的 `configs/`。如果只安装了 wheel，先按照
-[内置配置获取说明](docs/zh/getting_started.md#configuration-files-after-wheel-installation)
-将默认配置复制到当前工作目录。
+可以在源码目录中直接运行这些命令。只安装了 wheel 时，先将
+[安装包内的配置文件](docs/zh/getting_started.md#configuration-files-after-wheel-installation)
+复制到当前工作目录。
 
 ```bash
 head2field-make-synthetic-training --output-dir generated/synthetic-training
@@ -159,23 +159,22 @@ head2field-train \
   --output-dir generated/synthetic-run
 ```
 
-这些示例使用生成的小型数组检查软件是否正常运行，不能用来评估真实数据的预测精度。
-更多示例见[examples](examples/README_zh.md)。
+生成的小型数组用于检查训练能否运行，不代表真实头部结构，也不用于评估预测精度。
+其他检查方法见[示例](examples/README_zh.md)。
 
 <a id="reproduction"></a>
 
 ## 🔬 训练与评估
 
-默认训练配置为 [training_v1.json](configs/training_v1.json)，径向分区阈值为 **50/100 mm**。
-使用 AdamW（学习率 `2e-4`、weight decay `1e-4`）和 CUDA FP16，每步包含八个
-source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 轮，采用 25 轮余弦调度，
-每轮结束验证；连续五轮验证损失未降低时早停，测试使用验证最优模型。
+真实数据训练需要先准备被试输入和 FEM 标签。默认配置 [training_v1.json](configs/training_v1.json)
+使用 AdamW（学习率 `2e-4`、weight decay `1e-4`）和 CUDA FP16，每步处理八个源电极到 Oz 的电极对
+及 49,152 个查询位置。数据损失按 **50/100 mm** 划分径向区域。
 
-真实数据训练需要 预处理数据、FEM 标签和 CUDA 版 PyTorch。数据准备、训练配置、
-验证与 checkpoint 恢复见[训练说明](docs/zh/training.md)。
-
-数据划分、完整电场评估指标和运行时间测量见
-[评估与可重复实验](docs/zh/paper_reproduction.md)。
+训练按完整 epoch 进行，最多 25 轮，使用 25 轮余弦学习率调度，每轮结束时验证。
+连续五轮验证损失未降低即早停，测试使用验证损失最低的模型。
+数据准备、训练设置和断点恢复见[训练说明](docs/zh/training.md)；
+数据划分、FEM 对比和计时方法见[评估与可重复实验](docs/zh/paper_reproduction.md)。
+参与者数据与队列划分需另行获取。
 
 <a id="documentation"></a>
 
@@ -198,12 +197,12 @@ source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 �
 
 ## 🤝 贡献
 
-开发环境与验证命令见[贡献指南](docs/CONTRIBUTING_zh.md)。实现与依赖、软件变更和发布要求分别见
-[实现与依赖](docs/SOURCE_PROVENANCE_zh.md)、[CHANGELOG_zh.md](docs/CHANGELOG_zh.md) 和
+开发环境搭建和修改后的检查方法见[贡献指南](docs/CONTRIBUTING_zh.md)。
+[实现与依赖](docs/SOURCE_PROVENANCE_zh.md)介绍各组件的职责，
+[更新记录](docs/CHANGELOG_zh.md)汇总软件变更。维护者发布安装包时可使用
 [发布清单](docs/RELEASE_CHECKLIST_zh.md)。
 
-公开 API 名称和 CLI 帮助使用英文，新增源码注释与 docstring 使用中文。全部公开指南均提供英文与简体中文版本，
-每页顶部可切换同一篇文档的语言。
+公开文档均提供英文和简体中文版本，可通过每页顶部的链接切换语言。
 
 <a id="citation"></a>
 
@@ -226,8 +225,8 @@ source→Oz 电极对及 49,152 个查询。完整 epoch 训练最多运行 25 �
 }
 ```
 
-题目与作者顺序对应 [CITATION.cff](CITATION.cff)。该文件尚未记录发表年份、期刊和 DOI。
-软件、相关方法与数据来源的引用要求见[引用指南](docs/CITATION_GUIDE_zh.md)。
+论文题目与作者顺序以 [CITATION.cff](CITATION.cff) 为准。软件、相关方法和数据来源的引用方式见
+[引用指南](docs/CITATION_GUIDE_zh.md)。
 
 模型开发受益于 WU-Minn Human Connectome Project 数据，[数据使用说明](docs/DATA_USE_zh.md)
 提供 HCP 致谢和方法引用要求的官方链接。源码与 Python 安装包不包含参与者影像、网格、

@@ -2,53 +2,53 @@
 
 [English](getting_started.md) · [简体中文](../zh/getting_started.md)
 
-This guide covers installation, prediction, and a small training check. The
-wheel includes the pretrained Head2Field v1 model, default configurations, and
-technical documentation. Your input images and prepared subjects stay local.
+Install Head2Field, prepare a subject, and predict the subject's 75 lead-field
+maps. The wheel includes pretrained weights, default configurations, and the
+technical guides. Supply your own T1 image and, when required, an alignment
+template.
 
-Installed documentation is also readable with
+You can also read this guide after installation with
 `head2field.resource_paths.read_packaged_text("docs", "en/getting_started.md")`.
 
 ## Installation
 
-Use Python 3.11 or newer. From the directory containing the downloaded wheel:
+Use Python 3.11 or newer. In the directory containing the downloaded wheel, run:
 
 ```bash
 python -m pip install ./head2field-0.1.0-py3-none-any.whl
 head2field-predict --help
 ```
 
-For preprocessing and FEM workflows, install the wheel with its optional extra:
+For preprocessing and FEM label generation, install the additional dependencies:
 
 ```bash
 python -m pip install './head2field-0.1.0-py3-none-any.whl[full]'
 ```
 
-`full` adds SciPy and h5py. SimNIBS/CHARM 4.6.0 is installed separately and must
-be available in the Python environment running preprocessing or FEM commands.
-For a source checkout, use `python -m pip install '.[full]'` instead. See
+The `full` extra adds SciPy and h5py. Install SimNIBS/CHARM 4.6.0 separately in
+the same Python environment used for preprocessing or FEM. From a source
+checkout, use `python -m pip install '.[full]'`. See
 [preprocessing](preprocessing.md) and [FEM label generation](fem_label_generation.md)
-for the external head-modeling and solver requirements.
+for details.
 
-CPU inference works with the base installation. To use a GPU, select a PyTorch
-installation compatible with your CUDA driver and check it in the same
-environment as Head2Field:
+The base installation supports CPU inference. For GPU inference, install a
+PyTorch build compatible with your CUDA driver, then check the active environment:
 
 ```bash
 python -c "import torch; print(torch.__version__); print(torch.cuda.is_available())"
 ```
 
-Use `--device cuda` or `--device cuda:0` when CUDA is available. Real-data
-training uses CUDA FP16; the synthetic training check below uses CPU FP32.
+If CUDA is available, use `--device cuda` or `--device cuda:0`. Real-data
+training uses CUDA FP16; the small training example below runs on CPU in FP32.
 
 ## Prepare inputs
 
-Inference consumes a directory containing `prepared_subject_v1.json` and its
-referenced files. It needs anatomy, conductivity, GM/WM query rows, and the
-standard 76-electrode cap. The exact files, coordinates, and tissue labels are
-listed in the [input format](input_contract.md).
+Inference reads a subject directory containing `prepared_subject_v1.json`,
+preprocessed images, conductivity, GM/WM query points, and the standard
+76-electrode cap. The [input guide](input_contract.md) describes the files,
+tissue labels, and coordinate conventions.
 
-Starting with a raw T1 image:
+To prepare a raw T1 image:
 
 ```bash
 head2field-prepare \
@@ -60,10 +60,11 @@ head2field-prepare \
   --prepared-output-dir prepared_subject
 ```
 
-`non_hcp_raw` estimates one rigid alignment; inspect the resulting QC image.
-For already ACPC-aligned, distortion-corrected HCP T1 data, choose `hcp_acpc`
-and omit `--template`. Each output directory must be new. The alignment
-template is supplied by the user under its applicable distribution terms.
+The `non_hcp_raw` profile performs one rigid alignment. Inspect the QC image
+before using the result. For HCP T1 images that already have ACPC alignment and
+distortion correction, select `hcp_acpc` and omit `--template`. All output
+directories must be new. Obtain the alignment template under its applicable
+terms of use.
 
 ## Predict and inspect fields
 
@@ -74,13 +75,12 @@ head2field-predict \
   --device cpu
 ```
 
-The command verifies the prepared inputs and bundled weights before prediction.
-It writes a `[75,Q,3]` float32 field basis, query coordinates, electrode pairs,
-and a JSON manifest. `Q` is the number of prepared GM/WM query rows.
-Each source-to-Oz map represents source `+1 mA` and Oz `-1 mA`; components are
-world-RAS `[Ex,Ey,Ez]` in `V/m`.
+After checking the inputs and weights, the command writes a float32
+`[75,Q,3]` field basis, query coordinates, electrode pairs, and a JSON manifest.
+`Q` is the number of GM/WM query points. Each map represents `+1 mA` at its
+source and `-1 mA` at Oz, with world-RAS components `[Ex,Ey,Ez]` in `V/m`.
 
-Read the basis without loading the entire array into RAM:
+Use a memory map to inspect the basis without loading the complete array into RAM:
 
 ```python
 import json
@@ -95,17 +95,17 @@ queries = np.load(output / "query_world_ras_mm.npy", allow_pickle=False)
 print(basis.shape, manifest["source_names"], queries.shape)
 ```
 
-Preserve all five output files together. Use the manifest's `source_names` to
-interpret the electrode axis and the query arrays to interpret the query axis.
-For current combinations, chunking, and Python inference, see
-[inference](inference.md).
+Keep all five output files together. The manifest's `source_names` gives the
+order of the electrode axis; the query arrays identify the locations along the
+query axis. See [inference](inference.md) for current combinations, chunk sizes,
+and the Python API.
 
 ## Configuration files after wheel installation
 
-Prediction selects its bundled weights and fixed v1 architecture automatically.
-Training and preflight use the configuration file selected by `--config`. A source checkout
-already contains `configs/`. After installing only the wheel, copy the existing
-default configuration resources into your working directory:
+Prediction automatically loads the bundled weights and their matching model
+architecture. Training and preflight read the file given by `--config`. A source
+checkout contains `configs/`; after a wheel-only installation, copy the bundled
+defaults into your working directory:
 
 ```python
 from pathlib import Path
@@ -119,13 +119,13 @@ for name in CONFIG_FILES:
         file.write(read_packaged_text("configs", name))
 ```
 
-Run this once in a new working directory. Exclusive file creation preserves
-existing local configuration files. These are copies of the shipped defaults;
-no settings are inferred from the machine or input data.
+Run this once in a new working directory. The snippet refuses to replace an
+existing configuration file. It copies the shipped defaults without changing
+settings for the local machine or input data.
 
 ## Small CPU training check
 
-With the default configuration files available:
+Once the configuration files are available, run:
 
 ```bash
 head2field-make-synthetic-training --output-dir generated/synthetic-training
@@ -140,23 +140,22 @@ head2field-train \
   --output-dir generated/synthetic-run
 ```
 
-The check uses an 8-cube test model and analytic data, with one fictional
-training subject and one fictional validation subject. It exercises the
-training machinery; it does not measure pretrained-model accuracy. Real-data
-preparation, training, and resume are described in [training](training.md).
+This example uses an 8-cube test model and analytic data for one fictional
+training subject and one fictional validation subject. It checks that the
+training workflow runs; it does not evaluate the pretrained model. For real
+data and checkpoint recovery, see [training](training.md).
 
 ## Common setup issues
 
 | Symptom | Check or action |
 | --- | --- |
-| `head2field-predict` is unavailable | Activate the environment used for installation. `python -m head2field.cli --help` runs the same prediction parser. |
-| `configs/training_smoke_v1.json` is missing | Copy the bundled configuration resources using the snippet above, or run from the source checkout. |
-| Output directory already exists | Choose a new destination; commands preserve prior results. |
-| Prepared-subject metadata or coordinate validation fails | Check the input manifest and its original referenced files; see the input format. |
-| CUDA is unavailable | Check the PyTorch build and driver in the active environment; use CPU for inference. |
-| GPU memory is insufficient | Reduce `--query-chunk-size` first, then `--electrode-batch-size`; pair/query ordering stays fixed. |
-| Custom weights fail strict validation | Use a bare FP32 v1 state dictionary with the expected keys and shapes; see the weight format below. |
+| `head2field-predict` is unavailable | Activate the environment used for installation. `python -m head2field.cli --help` opens the same prediction command. |
+| `configs/training_smoke_v1.json` is missing | Copy the bundled defaults as shown above, or run from a source checkout. |
+| Output directory already exists | Choose a new destination; existing results are not overwritten. |
+| Input or coordinate validation fails | Check `prepared_subject_v1.json` and the files it references against the input guide. |
+| CUDA is unavailable | Check the PyTorch build and driver in the active environment, or use CPU inference. |
+| GPU memory is insufficient | Reduce `--query-chunk-size`, then `--electrode-batch-size`. Electrode and query order remain unchanged. |
+| Custom weights fail validation | Supply a bare FP32 v1 state dictionary with the required parameter names and shapes. |
 
-Pretrained checksums and custom-weight requirements are described in
-[weights](../../weights/README.md). The [code guide](code_guide.md) explains the
-implementation and tensor conventions.
+See [weights](../../weights/README.md) for checksums and custom-weight loading,
+and the [code guide](code_guide.md) for implementation details.

@@ -2,16 +2,17 @@
 
 [English](training.md) · [简体中文](../zh/training.md)
 
-This guide covers data preparation, CUDA FP16 training, validation, and local
-resume. Training combines data and physics losses. Users prepare the images,
-prepared subjects, FEM labels, caches, statistics, and physics samples; logs and
-resume files are saved locally.
+Training starts from prepared subjects and FEM labels. The steps below cover
+loss statistics, physics samples, CUDA FP16 training, validation, and resuming an
+interrupted run. The training objective combines field errors with physical
+constraints; checkpoints and logs are saved in the output directory.
 
 ## Execution profiles
 
-The commands below use the existing configuration files in `configs/`. For a
-wheel-only installation, copy the bundled defaults as shown in
-[getting started](getting_started.md#configuration-files-after-wheel-installation).
+Choose the real-data configuration for a full model or the synthetic
+configuration to check the installation. The examples use files in `configs/`.
+After a wheel-only installation, [copy the bundled defaults](getting_started.md#configuration-files-after-wheel-installation)
+into your working directory first.
 
 | Configuration | Use | Execution |
 | --- | --- | --- |
@@ -38,21 +39,20 @@ The default real-data profile specifies:
 | Early stopping | Five consecutive epochs without a lower validation loss |
 | Test checkpoint | Best checkpoint selected by validation loss |
 
-Each epoch visits every training subject and every combination of electrode
-batches and query chunks. Subject order, source order, and query order are
-deterministically shuffled per epoch. Partial final batches and query chunks
-are included, so all 75 source pairs and all GM/WM queries are covered. The
-epoch length is the sum, over subjects, of
-`ceil(75 / 8) * ceil(number_of_queries / 49152)` steps. The learning rate stays
-constant within an epoch and advances only after the epoch finishes.
+An epoch covers every training subject, all 75 source pairs, and all GM/WM
+query points. The sampler shuffles subjects, sources, and queries using the
+epoch seed, and includes the final partial batches. For each subject, it takes
+`ceil(75 / 8) * ceil(number_of_queries / 49152)` steps; the epoch length is the
+sum across subjects. The learning rate stays constant during an epoch and
+changes after that epoch finishes.
 
-AMP uses an initial gradient scale of 1024 and a growth interval of 2000.
-The synthetic installation profile uses an 8-cube test-only model, CPU FP32,
-and two compact epochs; it is separate from the real-data training settings.
+AMP starts with a gradient scale of 1024 and a growth interval of 2000.
+The synthetic profile instead runs an 8-cube model on CPU in FP32 for two
+short epochs. It is an installation check, not the full training configuration.
 
 ## Data and physics objective
 
-The v1 GP objective uses:
+The default GP configuration uses the following data and physics settings:
 
 - the fixed N128 GP model factory and 75 ordered source-to-Oz pairs;
 - raw scalar conductivity in `S/m` on disk and the shared float32
@@ -67,47 +67,45 @@ The v1 GP objective uses:
   each physical term, and a 0-to-1 step curriculum over 10,000 steps; and
 - world-RAS vector components in `V/m` for source `+1 mA` and Oz `-1 mA`.
 
-The formulas are implemented in
-[losses.py](../../src/head2field/training/losses.py) and
-[physics.py](../../src/head2field/training/physics.py). The model prediction and FEM field are evaluated by the
-same discrete physical operators. Prediction values cannot alter validity
-masks or fitted thresholds.
+The data-loss formulas are in [losses.py](../../src/head2field/training/losses.py),
+and the physical operators are in [physics.py](../../src/head2field/training/physics.py).
+The same operators evaluate predicted and FEM fields. Sample-validity masks
+and fitted thresholds come from the prepared data and stay fixed during training.
 
-The per-step data-loss scale is `M / (75 * N_train)`, fixed across source
-batches and query chunks, including partial tails. Validation and test reuse
-the training-derived scale. The energy denominator median is computed across
-valid source fields within each subject. See [evaluation and reproducibility](paper_reproduction.md)
-for dataset splits, complete-field metrics, and runtime measurements.
+Each step uses the same data-loss scale, `M / (75 * N_train)`, including
+partial source batches and query chunks. Validation and test use the scale
+computed from the training partition. The energy denominator uses the median
+across valid source fields within each subject. See [evaluation and reproducibility](paper_reproduction.md)
+for data splits, complete-field metrics, and timing methods.
 
 ## Real-data manifest
 
-The machine schema is
+Describe the dataset in a manifest that follows
 [`training_dataset_v1.schema.json`](../../schemas/training_dataset_v1.schema.json).
-Every path is relative to the dataset manifest, and every referenced manifest
-is listed by its relative path. Each anonymous `subject_key` references:
+Use paths relative to that manifest. Each anonymous `subject_key` points to
+four files:
 
 1. `prepared_subject_v1.json`;
 2. `fem_labels_v1.json`;
 3. `training_loss_statistics_v2.json`; and
 4. `training_physics_pool_v1.json`.
 
-The loader revalidates the underlying prepared-subject and all 75 FEM label
-files. It cross-checks source order, query order, conductivity-table ID/values,
-the `sigma / 1.654` transform ID, array shapes, dtypes, finite values, and all
-manifest/file sizes. Groups, rather than individual rows, own the `train`,
-`validation`, or optional `test` partition. A group cannot occur in more than
-one partition, and both train and validation are mandatory.
+When loading a dataset, the program checks the prepared subject and all 75
+FEM label files. Source and query order, conductivity-table ID and values,
+the `sigma / 1.654` transform ID, shapes, dtypes, finite values, and recorded
+file sizes must agree. Assign each group to only one of `train`, `validation`,
+or the optional `test` partition. Both training and validation groups are required.
 
-Resume requires the configuration, data groups, file paths, and source order
-to match the previous run. Start a new run when changing these settings.
+To resume a run, keep its configuration, group assignments, file paths, and
+source order unchanged. Start a new run if any of these settings change.
 
 ## Training data preparation
 
-All destinations below must not exist. Commands use staging directories and
-refuse to overwrite prior outputs.
+Use a new destination for each command below. Preparation writes to a staging
+directory and refuses to overwrite existing results.
 
-An optional query-major target cache can be generated without changing any FEM
-label:
+A query-major target cache is optional. It reorganizes reads for training and
+leaves the FEM labels unchanged:
 
 ```bash
 head2field-prepare-cache \
@@ -116,8 +114,8 @@ head2field-prepare-cache \
   --output-dir derived/subject-a/cache-v1
 ```
 
-Generate stable-energy statistics from the verified labels. Record each
-statistics manifest path and file size in the dataset manifest:
+Next, compute stable-energy statistics from the checked FEM labels. Add the
+resulting statistics-manifest path and file size to the dataset manifest:
 
 ```bash
 head2field-prepare-statistics \
@@ -126,8 +124,10 @@ head2field-prepare-statistics \
   --output-dir derived/subject-a/loss-statistics-v1
 ```
 
-Physics preparation is intentionally three-stage so validation FEM values can
-never fit thresholds:
+Prepare physics samples in three stages: build raw pools for each subject,
+fit calibration on the training pools, then apply that calibration to every
+pool. Keeping the fit step separate prevents validation FEM values from being
+used to set thresholds:
 
 ```bash
 # 对每个训练和验证被试生成几何及原始 FEM 残差/尺度，不拟合阈值。
@@ -149,14 +149,14 @@ head2field-prepare-physics finalize \
   --output-dir derived/subject-a/physics-pool-v1
 ```
 
-`fit` stores the paths, source lists and array sizes of the training raw pools supplied to it. A
-validation raw pool must never be passed to that command.
+Pass only training raw pools to `fit`. It records their paths, source lists,
+and array sizes; validation pools belong only in the `raw` and `finalize` stages.
 
 ## Synthetic installation and resume smoke
 
-Generate a compact dataset containing one fictional training subject and one
-fictional validation subject. It retains the real 75-source order but contains
-only analytic arrays on an 8³ grid:
+For an installation check, generate one fictional training subject and one
+fictional validation subject. These analytic 8³ arrays use the same 75-source
+order as real inputs:
 
 ```bash
 head2field-make-synthetic-training \
@@ -172,14 +172,14 @@ head2field-train \
   --output-dir runs/synthetic-smoke
 ```
 
-This runs up to two CPU FP32 epochs through the model forward, stable-energy
-loss, four physical operators, train-only state machine, and deterministic
-validation. The small model is for testing only and cannot accept official
-N128 initialization weights.
+The example runs up to two CPU FP32 epochs, including forward evaluation,
+stable-energy loss, four physical operators, training-state updates, and
+validation. This small model cannot load the full N128 initialization weights.
+Its results check software operation, not prediction accuracy.
 
 ## Real-data training
 
-Run preflight before allocating a new output directory:
+Check the configuration and dataset before starting training:
 
 ```bash
 head2field-train-preflight \
@@ -192,15 +192,16 @@ head2field-train \
   --output-dir runs/custom-cuda-run
 ```
 
-Use `--init-weights` only for a bare `str -> FP32 Tensor` state dictionary. For
-the fixed N128 model, the CLI additionally enforces the official 208-tensor and
-2,607,870-value schema before initialization. Optimizer, scheduler, step,
-sampler, and all RNGs start fresh.
+To start a new run from existing model weights, use `--init-weights` with a
+bare `str -> FP32 Tensor` state dictionary. The N128 model requires exactly
+208 tensors and 2,607,870 values with matching parameter names and shapes.
+The optimizer, scheduler, step count, sampler, and all random-number generators
+start from their initial states.
 
-Use `--resume-state` only for a complete state created by this training code.
-Because PyTorch complete states use pickle, the CLI also requires
-`--trust-local-resume-state`; never enable it for an untrusted download. Resume
-always writes a new output directory:
+To continue an interrupted run, use `--resume-state` with a complete state
+saved by this training code. These files use pickle, so the CLI also requires
+`--trust-local-resume-state`; use it only for a state file you trust. Write the
+continued run to a new output directory:
 
 ```bash
 head2field-train \
@@ -211,29 +212,33 @@ head2field-train \
   --output-dir runs/part-b
 ```
 
-The complete local state contains model, AdamW, cosine scheduler, AMP scaler,
-global step, Python RNG, NumPy RNG, Torch CPU/CUDA RNGs, named
-augmentation/dropout generators, sampler permutations/cursors, best validation
-loss and model, early-stopping counter, the exact training run settings, and all prior
-log rows. State files are written to a same-directory temporary file, flushed, and atomically
-promoted without overwriting an existing file. They are local artifacts and
-must never be placed in `src/head2field/resources/weights/`.
+A resume state contains the model, AdamW optimizer, cosine scheduler, AMP
+scaler, global step, and sampler permutations and cursors. It also saves the
+Python, NumPy, Torch CPU/CUDA, and named augmentation/dropout random-number
+states, along with the best validation loss and model, early-stopping counter,
+run settings, and previous log rows.
 
-The CPU deterministic regression test compares uninterrupted `N` steps with `K`
-steps plus save/reload plus continuation to `N`. Model tensors, optimizer,
-scheduler, every RNG, sampler, early-stopping state, and canonical JSONL log are
-exactly equal. CUDA state is persisted as well; bitwise CUDA equivalence is not
-claimed by the CPU test.
+The program flushes a temporary file in the destination directory before
+atomically saving the state, without overwriting an existing file. Keep these
+local training files out of `src/head2field/resources/weights/`.
+
+The CPU resume regression compares an uninterrupted `N`-step run with a run
+saved after `K` steps and continued to `N`. Model tensors, optimizer, scheduler,
+random-number states, sampler, early-stopping state, and canonical JSONL logs
+match exactly. CUDA state is saved too, but the CPU check does not establish
+bitwise reproducibility on a GPU.
 
 ## Validation and outputs
 
-Validation traverses all validation subjects and source/query combinations in
-fixed order, with `model.eval()`, deterministic branches, and no training
-generator. It averages the combined data and physics objective by subject,
-always using `a(t)=1`. Epoch-end validation metrics, learning rates, and the
-early-stopping counter are embedded in the step log. Strictly lower validation
-loss resets the counter and selects a new best checkpoint; five consecutive
-non-improving epochs stop training.
+At the end of each epoch, validation visits every validation subject and all
+source/query combinations in a fixed order. It uses `model.eval()`,
+deterministic branches, and no training random-number generator. The combined
+data and physics objective is averaged by subject with `a(t)=1`.
+
+The step log records validation metrics, learning rates, and the early-stopping
+counter. A strictly lower validation loss selects a new best checkpoint and
+resets the counter. Training stops after five consecutive epochs without an
+improvement.
 
 The training output is a new directory containing:
 
@@ -245,15 +250,16 @@ train_state_step_000005000.pt
 ...
 ```
 
-`best_model.pt` is a bare model state dictionary selected by validation loss,
-and the returned in-memory model is restored to it for test evaluation. Resume
-states retain the latest training model and complete optimizer/scheduler state.
-An interrupted run exports the best checkpoint among its completed validation
-epochs. If the real-data manifest contains a `test` partition, training evaluates
-that partition once after reaching the epoch budget or early stopping, using
-the restored best model, and writes `test_metrics_v1.json`. A deliberate
-mid-training interruption does not trigger test evaluation.
+`best_model.pt` contains the bare model state dictionary with the lowest
+validation loss. Before test evaluation, the in-memory model is restored to
+those weights. Resume files instead retain the latest training model and the
+complete optimizer and scheduler state.
 
-These outputs are custom model artifacts. Record their configuration, data
-split, and evaluation results before using them for inference. Participant data
-are supplied separately.
+An interrupted run exports the best checkpoint from its completed validation
+epochs. If the real-data manifest includes a `test` partition, the restored
+best model evaluates it once after the epoch limit or early stopping and writes
+`test_metrics_v1.json`. Stopping partway through training does not run test
+evaluation.
+
+Keep the configuration, data split, and evaluation results alongside weights
+you train. Participant data are obtained separately.

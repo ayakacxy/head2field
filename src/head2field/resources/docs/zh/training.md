@@ -4,13 +4,13 @@
 
 [English](../en/training.md) · [简体中文](training.md)
 
-本指南介绍训练数据准备、CUDA FP16 训练、验证和断点恢复。训练目标包括数据损失与物理损失。影像、预处理数据、FEM 标签、缓存、统计量和物理损失采样数据由用户准备；日志和恢复文件保存在本地。
+训练从预处理后的被试数据和 FEM 标签开始。本指南依次介绍损失统计、物理采样数据、CUDA FP16 训练、验证和断点恢复。训练同时约束电场误差与物理性质，日志和恢复文件保存在输出目录。
 
 <a id="execution-profiles"></a>
 
 ## 选择训练配置
 
-以下命令使用 `configs/` 中的现有配置。仅安装 wheel 时，可按[上手指南](getting_started.md#configuration-files-after-wheel-installation)复制内置默认配置。
+训练完整模型时选择真实数据配置，检查安装时选择合成数据配置。以下命令使用 `configs/` 中的文件；仅安装 wheel 时，请先按[上手指南](getting_started.md#configuration-files-after-wheel-installation)将内置默认配置复制到工作目录。
 
 | 配置 | 用途 | 执行方式 |
 | --- | --- | --- |
@@ -39,15 +39,15 @@
 | 早停 | 连续五轮验证损失未降低 |
 | 测试 checkpoint | 按验证损失选择的最优 checkpoint |
 
-每个 epoch 访问全部训练被试，以及所有电极批次与查询分块组合。被试、源和查询顺序按随机种子在每轮打乱，包含末尾不完整批次和分块，因此覆盖全部 75 个源电极对与 GM/WM 查询。epoch 步数是各被试 `ceil(75 / 8) * ceil(number_of_queries / 49152)` 之和。学习率在 epoch 内保持不变，仅在该轮结束后推进。
+每个 epoch 覆盖全部训练被试、75 个源电极对和所有 GM/WM 查询点。采样器按本轮随机种子打乱被试、源和查询顺序，也处理末尾不完整批次。每个被试需要 `ceil(75 / 8) * ceil(number_of_queries / 49152)` 步，一轮总步数为所有被试之和。学习率在一轮内保持不变，该轮结束后再更新。
 
-AMP 初始梯度 scale 为 1024，增长间隔为 2000。合成安装配置采用仅供测试的 8³ 小模型、CPU FP32 并运行两个 epoch，仅用于安装和恢复检查。
+AMP 的初始梯度缩放值为 1024，增长间隔为 2000。合成配置改用 8³ 小模型，在 CPU 上以 FP32 运行两个短 epoch，用于检查安装和恢复流程。
 
 <a id="data-and-physics-objective"></a>
 
 ## 数据与物理目标
 
-v1 GP 目标采用：
+默认 GP 配置采用以下数据损失与物理损失设置：
 
 - N128 GP 模型和 75 个有序 source→Oz 电极对；
 - 磁盘上的原始 `S/m` 标量电导率，以及共享的 float32 `sigma / 1.654` 网络变换；
@@ -57,32 +57,32 @@ v1 GP 目标采用：
 - `one_sided_excess_v1`、仅由训练数据拟合的 FEM scale floor 和 MAD，各物理项权重为 5，10,000 步内从 0 递增到 1 的 curriculum；
 - world-RAS 向量分量，单位为 `V/m`，对应源电极 `+1 mA` 和 Oz `-1 mA`。
 
-公式位于 [losses.py](../../src/head2field/training/losses.py) 和 [physics.py](../../src/head2field/training/physics.py)。模型预测与 FEM 电场使用同一组离散物理算子；预测值不能改变有效掩膜或拟合阈值。
+数据损失公式见 [losses.py](../../src/head2field/training/losses.py)，物理算子见 [physics.py](../../src/head2field/training/physics.py)。预测电场与 FEM 电场使用同一组算子，有效采样位置和拟合阈值由准备好的数据确定，训练中保持不变。
 
-每步数据损失缩放为 `M / (75 * N_train)`，在源批次与查询分块之间保持固定，包含末尾不完整批次。验证和测试复用训练确定的缩放。能量分母中位数在每个被试内部的有效源电场之间计算。数据划分、完整电场指标和计时方法见[评估与可重复实验](paper_reproduction.md)。
+每步使用相同的数据损失缩放 `M / (75 * N_train)`，末尾不完整的源批次和查询分块也不例外。验证和测试使用训练分区确定的缩放。能量分母采用每个被试内部有效源电场的中位数。数据划分、完整电场指标和计时方法见[评估与可重复实验](paper_reproduction.md)。
 
 <a id="real-data-manifest"></a>
 
 ## 训练数据清单
 
-清单字段定义见 [`training_dataset_v1.schema.json`](../../schemas/training_dataset_v1.schema.json)。全部路径相对于数据集清单，引用的文件也使用相对路径。每个匿名 `subject_key` 引用：
+在数据集清单中列出训练数据，字段定义见 [`training_dataset_v1.schema.json`](../../schemas/training_dataset_v1.schema.json)。文件路径相对于该清单。每个匿名 `subject_key` 对应以下四个文件：
 
 1. `prepared_subject_v1.json`；
 2. `fem_labels_v1.json`；
 3. `training_loss_statistics_v2.json`；
 4. `training_physics_pool_v1.json`。
 
-加载数据时，程序检查预处理数据与全部 75 个 FEM 标签文件，包括源电极和查询点顺序、电导率表、`sigma / 1.654` 变换、数组形状、数据类型和文件大小，并检查是否含 NaN 或 Inf。分组决定 `train`、`validation` 或可选 `test` 分区，同一组不能跨分区，训练与验证分区均为必需。
+加载时，程序检查预处理数据和全部 75 个 FEM 标签文件。源电极与查询点顺序、电导率表 ID 及数值、`sigma / 1.654` 变换 ID、数组形状、数据类型和记录的文件大小必须一致，数值中不能有 NaN 或 Inf。每组只能属于 `train`、`validation` 或可选的 `test` 分区之一，训练与验证分组均不能缺少。
 
-恢复训练时，配置、数据分组、文件路径和源电极顺序必须与上次运行一致。需要修改这些设置时，请开始新的训练运行。
+恢复训练时，保留原有配置、分组、文件路径和源电极顺序。需要修改这些设置时，请开始新运行。
 
 <a id="asset-preparation"></a>
 
 ## 训练数据准备
 
-以下目标目录均必须尚不存在。命令使用 staging 目录，不覆盖已有输出。
+为以下每条命令指定新的目标目录。准备过程中先写入暂存目录，不覆盖已有结果。
 
-可选的 query-major 目标缓存无需修改 FEM 标签：
+query-major 目标缓存是可选项，用于调整训练时的读取顺序，不修改 FEM 标签：
 
 ```bash
 head2field-prepare-cache \
@@ -91,6 +91,8 @@ head2field-prepare-cache \
   --output-dir derived/subject-a/cache-v1
 ```
 
+从已检查的 FEM 标签计算稳定能量统计，在数据集清单中记录统计清单路径和文件大小：
+
 ```bash
 head2field-prepare-statistics \
   --prepared-subject prepared/subject-a \
@@ -98,7 +100,7 @@ head2field-prepare-statistics \
   --output-dir derived/subject-a/loss-statistics-v1
 ```
 
-物理准备分为三个阶段，保证验证 FEM 值不能参与阈值拟合：
+物理采样数据按三步准备：为每个被试生成原始数据，用训练被试拟合校准统计，再将同一统计用于各被试。将拟合单独列为一步，可以避免验证集 FEM 值参与阈值设置：
 
 ```bash
 # 对每个训练和验证被试生成几何及原始 FEM 残差/尺度，不拟合阈值。
@@ -120,11 +122,13 @@ head2field-prepare-physics finalize \
   --output-dir derived/subject-a/physics-pool-v1
 ```
 
+`fit` 只接收训练分区的原始数据，并记录其路径、源列表和数组大小。验证数据仅用于 `raw` 和 `finalize`，不要传给 `fit`。
+
 <a id="synthetic-installation-and-resume-smoke"></a>
 
 ## 合成安装与恢复检查
 
-生成包含一个虚构训练被试和一个虚构验证被试的紧凑数据集，保留真实 75 源顺序，仅包含 8³ 网格上的解析数组：
+检查安装时，生成一个虚构训练被试和一个虚构验证被试。数据为 8³ 网格上的解析数组，源电极顺序与真实输入的 75 源顺序相同：
 
 ```bash
 head2field-make-synthetic-training \
@@ -140,13 +144,13 @@ head2field-train \
   --output-dir runs/synthetic-smoke
 ```
 
-示例使用 CPU FP32，最多运行两个 epoch，检查模型前向计算、数据与物理损失、训练状态保存及验证流程。小模型仅用于测试，不能加载完整 N128 模型的预训练权重。
+示例在 CPU 上以 FP32 最多运行两个 epoch，经过前向计算、稳定能量损失、四类物理算子、训练状态更新和验证。该小模型不能加载完整 N128 模型的预训练权重，输出只用于检查软件流程，不代表预测精度。
 
 <a id="real-data-training"></a>
 
 ## 真实数据训练
 
-创建新训练输出目录前先执行预检：
+开始训练前，先检查配置和数据集：
 
 ```bash
 head2field-train-preflight \
@@ -159,9 +163,9 @@ head2field-train \
   --output-dir runs/custom-cuda-run
 ```
 
-`--init-weights` 仅用于裸 `str -> FP32 Tensor` state dictionary。固定 N128 模型初始化前，CLI 还要求官方的 208 张量、2,607,870 标量 schema。优化器、调度器、步数、采样器和全部 RNG 重新初始化。
+从已有模型权重开始新训练时，使用 `--init-weights`，输入应是裸 `str -> FP32 Tensor` state dictionary。N128 模型要求恰好 208 个张量、2,607,870 个标量，参数名和形状均需匹配。优化器、调度器、步数、采样器和全部随机数生成器从初始状态开始。
 
-`--resume-state` 仅用于本训练代码创建的完整状态。PyTorch 完整状态使用 pickle，因此 CLI 还要求 `--trust-local-resume-state`；不要为不可信下载启用该选项。恢复始终写入新输出目录：
+继续中断的训练时，使用 `--resume-state` 加载本训练代码保存的完整状态。该文件使用 pickle，因此命令还要求 `--trust-local-resume-state`；仅对可信文件启用它，并为后续训练指定新输出目录：
 
 ```bash
 head2field-train \
@@ -179,15 +183,17 @@ head2field-train \
 - 验证最优模型、验证损失和早停计数；
 - 本次运行的配置、数据集记录和已有日志。
 
-程序先写入同目录的临时文件，再保存为恢复文件，不覆盖已有文件。恢复文件只用于本地训练，不应放进 `src/head2field/resources/weights/`。
+程序先将状态写入并刷新同目录的临时文件，再原子保存，不覆盖已有文件。这类本地训练文件不要放入 `src/head2field/resources/weights/`。
 
-CPU 测试比较连续运行 `N` 步与运行 `K` 步后保存、重新加载并继续到 `N` 步的结果。模型、优化器、调度器、随机数状态、采样器、早停计数和 JSONL 日志均相同。CUDA 随机数状态也会保存，但 GPU 是否能逐位复现需要另外测试。
+CPU 恢复测试比较连续运行 `N` 步与运行 `K` 步后保存、加载并继续到 `N` 步的结果。模型、优化器、调度器、随机数状态、采样器、早停状态和规范化 JSONL 日志逐项相同。CUDA 状态也会保存，但这项 CPU 检查不能证明 GPU 的逐位可重复性。
 
 <a id="validation-and-outputs"></a>
 
 ## 验证与输出
 
-验证按固定顺序遍历全部验证被试及源/查询组合，使用 `model.eval()`、关闭随机增强，不使用训练 generator。组合数据与物理目标按被试平均，始终采用 `a(t)=1`。每轮验证指标、学习率和早停计数写入 step 日志。验证损失严格降低时重置计数并选取新的最优 checkpoint；连续五轮无改善时停止。
+每轮训练结束后，验证按固定顺序遍历全部验证被试及源/查询组合，使用 `model.eval()` 和确定性分支，不使用训练随机数生成器。数据与物理目标按被试平均，始终取 `a(t)=1`。
+
+step 日志记录验证指标、学习率和早停计数。验证损失严格降低时，程序保存新的最优 checkpoint 并重置计数；连续五轮没有改善时停止训练。
 
 训练在新目录输出：
 
@@ -199,6 +205,8 @@ train_state_step_000005000.pt
 ...
 ```
 
-`best_model.pt` 是按验证损失选择的裸模型 state dictionary，返回的内存模型恢复到该权重以进行测试。恢复状态保留最新训练模型及完整优化器/调度器状态。中断运行导出已完成验证 epoch 中的最优 checkpoint。真实数据清单含 `test` 分区时，在达到 epoch 预算或早停后，使用恢复的最优模型评估一次，写入 `test_metrics_v1.json`。人为中途停止训练不触发测试评估。
+`best_model.pt` 保存验证损失最低的裸模型 state dictionary。测试前，内存模型会恢复到这份权重；恢复文件则保留最新训练模型及完整优化器和调度器状态。
 
-使用这些训练结果进行推理时，请一同保存训练配置、数据划分和评估结果。参与者数据由用户另行提供。
+训练中断时，程序导出已完成验证轮次中的最优 checkpoint。真实数据清单包含 `test` 分区时，在达到 epoch 上限或早停后，用恢复的最优模型评估一次，写入 `test_metrics_v1.json`。中途停止训练不会触发测试评估。
+
+自行训练的权重应与配置、数据划分和评估结果一同保存。参与者数据需另行获取。

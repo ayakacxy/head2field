@@ -2,44 +2,44 @@
 
 [English](DATA_USE.md) · [简体中文](DATA_USE_zh.md)
 
-The software distribution contains source code, documentation, configurations,
-schemas, synthetic examples, and pretrained v1 model weights. It excludes
-participant images, segmentations,
-meshes, electrode localizations, FEM outputs, cohort manifests, labels,
-predictions, training statistics/caches, logs, and training-resume states.
+Head2Field distributes source code, documentation, configurations, schemas,
+synthetic examples, and pretrained model weights. Participant images,
+segmentations, meshes, electrode localizations, FEM outputs, cohort manifests,
+labels, predictions, training statistics/caches, logs, and training-resume
+states are kept outside the software distribution.
 
 ## Software, weights, and datasets
 
-The software is licensed under [GPL-3.0-only](LICENSE_GUIDE.md). This code license does
-not grant access to upstream datasets or replace their data-use terms.
+The source code uses [GPL-3.0-only](LICENSE_GUIDE.md). Dataset access and use
+remain governed by the upstream terms.
 
-The wheel and source archive include the v1 model weights, checksums, model
-card, weight documentation, license information, and data-use notices. The
-weights are a bare model state dictionary; a tensor-only format does not replace
+The wheel and source archive include model weights, checksums, a model card,
+weight documentation, license information, and data-use notices. The weights
+are a bare model state dictionary; this tensor-only format does not replace
 the terms governing the training data. See [weights](../weights/README.md).
 
-Users obtain their own imaging data and install external scientific dependencies
-under the applicable terms. No participant dataset, template, atlas, or SimNIBS
-installation is supplied by this repository.
+Obtain imaging data and external scientific dependencies under their
+applicable terms. The repository does not supply participant datasets,
+templates, atlases, or a SimNIBS installation.
 
 ## Keep participant data out of source changes
 
-Do not commit or attach participant-level images, meshes, FEM labels,
-predictions, subject/family identifiers, group manifests, re-identification
-keys, training-resume bundles, or credentials to code changes or issue reports.
-Use small synthetic examples to reproduce software problems.
+Use small synthetic inputs in bug reports and contribution examples. Keep
+participant images, meshes, FEM labels, predictions, subject/family
+identifiers, group manifests, re-identification keys, training-resume bundles,
+and credentials out of commits and issue attachments.
 
-Generated research outputs belong in a separate data location. Local development
-checks can use an ignored task directory under `.work/`. Before sharing logs or
-examples, remove participant identifiers, account details, and local storage
-paths.
+Store generated research outputs separately from source code. For local
+development checks, use an ignored task directory under `.work/`.
+Before sharing a log or example, remove participant identifiers, account
+details, and local storage paths.
 
 ## Synthetic examples
 
-The included generators create deterministic, small, non-anatomical arrays and
-fictional identifiers. They do not transform, average, or redistribute data from
-real participants. They check file loading and software workflows; they do not measure accuracy
-on real participant data.
+The generators create deterministic, small, non-anatomical arrays and fictional
+identifiers. They do not transform, average, or redistribute participant data.
+Use them to check file loading and software workflows; accuracy on participant
+data requires a separate evaluation.
 
 ## HCP acknowledgement and data-use terms
 
@@ -63,8 +63,8 @@ trained weight file.
 
 ## Research use
 
-Users are responsible for dataset access, institutional and ethics requirements,
-secure storage, and compliance with the terms of their inputs and dependencies.
-The model supports non-clinical research under the assumptions described in
-[MODEL_CARD.md](MODEL_CARD.md). It does not supply participant consent, dataset
-access, clinical validation, or calibrated uncertainty estimates.
+Users are responsible for dataset access, institutional and ethics
+requirements, secure storage, and compliance with the terms of their inputs
+and dependencies. The [model card](MODEL_CARD.md) describes the assumptions for
+non-clinical research use. The software does not provide participant consent,
+dataset access, clinical validation, or calibrated uncertainty estimates.

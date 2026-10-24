@@ -4,7 +4,7 @@
 
 ## Manuscript
 
-When using Head2Field in research, cite the manuscript:
+When using Head2Field in research, cite:
 
 > **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
 > Transcranial Electrical Stimulation Lead-Field Prediction from Structural
@@ -13,18 +13,18 @@ When using Head2Field in research, cite the manuscript:
 Authors, in order: Xiayu Chen, Xiaoxiao Wang, Zixin Cao, Senlin Liu,
 Zhichen Liu, Zhengyang Wang, Huiyu Du, Bensheng Qiu, and Yanming Wang.
 
-The machine-readable preferred citation is in [CITATION.cff](../CITATION.cff).
-Use that file for citation tools. It currently records the manuscript title
-and authors; it has no publication year or DOI entry.
+Use [CITATION.cff](../CITATION.cff) with citation tools.
+It records the preferred manuscript title and authors; no publication year
+or DOI is currently recorded.
 
 ## Software and supporting methods
 
-The software citation in [CITATION.cff](../CITATION.cff) identifies **Head2Field**,
+Record the software version used in your work.
+The software entry in [CITATION.cff](../CITATION.cff) identifies **Head2Field**
 version **0.1.0**, with **ayakacxy** as the software author.
-Record the package version used in your work; the software and
-model have separate version numbers.
+Model and software versions are recorded separately.
 
-Also cite the relevant methods and data sources described in
-[data use](DATA_USE.md) and [implementation and dependencies](SOURCE_PROVENANCE.md).
-The [evaluation guide](en/paper_reproduction.md) describes dataset splits,
+Cite the relevant methods and datasets linked in [data use](DATA_USE.md)
+and [implementation and dependencies](SOURCE_PROVENANCE.md).
+The [evaluation guide](en/paper_reproduction.md) describes data splits,
 field comparisons, and runtime measurements.

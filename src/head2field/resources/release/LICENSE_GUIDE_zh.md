@@ -8,12 +8,18 @@
 
 ## 源码许可证
 
-Head2Field 源码采用 **GPL-3.0-only**，记录于 `pyproject.toml` 和 `CITATION.cff`。正式许可证全文见 [LICENSE](../LICENSE)，该文本保持原样随源码和 wheel 分发。本说明提供项目相关声明的中英文入口。
+Head2Field 源码采用 **GPL-3.0-only**。
+许可证全文见 [LICENSE](../LICENSE)，该文件保持原样随 wheel 和源码包分发。
+`pyproject.toml` 和 `CITATION.cff` 使用相同的许可证标识。
 
 <a id="weights-dependencies-and-data"></a>
 
 ## 权重、依赖与数据
 
-内置预训练模型的分发声明见[权重说明](../weights/README_zh.md)和[数据使用说明](DATA_USE_zh.md)。外部软件许可证与包集成方式分别见[第三方声明](THIRD_PARTY_NOTICES_zh.md)和[实现与依赖](SOURCE_PROVENANCE_zh.md)。
+内置预训练模型的说明见[权重文档](../weights/README_zh.md)和[数据使用声明](DATA_USE_zh.md)。
+外部软件的许可证及接入方式见[第三方声明](THIRD_PARTY_NOTICES_zh.md)
+和[实现与依赖](SOURCE_PROVENANCE_zh.md)。
 
-数据集条款和致谢要求见[数据使用说明](DATA_USE_zh.md)。参与者影像、网格、FEM 输出和队列清单需另行获取，Python 安装包不包含这些数据。[发布清单](RELEASE_CHECKLIST_zh.md)列出了仓库与发布文件应包含的文件。
+[数据使用说明](DATA_USE_zh.md)列出了数据集条款和致谢要求。
+参与者影像、网格、FEM 输出及队列清单需另行获取，不包含在 Python 安装包中。
+仓库和发布文件应包含的内容见[发布清单](RELEASE_CHECKLIST_zh.md)。

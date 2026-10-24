@@ -4,21 +4,20 @@
 
 ## Source license
 
-Head2Field source code uses **GPL-3.0-only**, as recorded in
-`pyproject.toml` and `CITATION.cff`. The authoritative license text is
-[LICENSE](../LICENSE). That text is distributed unchanged with the source and
-wheel; this guide provides a bilingual entry point to the project's notices.
+Head2Field source code is licensed under **GPL-3.0-only**.
+The full license is in [LICENSE](../LICENSE), which is included unchanged in
+the wheel and source archive. `pyproject.toml` and `CITATION.cff` record the
+same license identifier.
 
 ## Weights, dependencies, and data
 
-The bundled pretrained model has its distribution notice in
-[weights](../weights/README.md) and [data use](DATA_USE.md). External software
-licenses and package integrations are described in
-[third-party notices](THIRD_PARTY_NOTICES.md) and
-[implementation and dependencies](SOURCE_PROVENANCE.md).
+The [weight documentation](../weights/README.md) and
+[data-use notice](DATA_USE.md) cover the bundled pretrained model.
+For external software, see [third-party notices](THIRD_PARTY_NOTICES.md)
+and [implementation and dependencies](SOURCE_PROVENANCE.md).
 
-Dataset terms and acknowledgements are listed in [data use](DATA_USE.md).
+[Data use](DATA_USE.md) lists dataset terms and acknowledgements.
 Participant images, meshes, FEM outputs, and cohort manifests are obtained
-separately and are excluded from the Python distributions. The
-[release checklist](RELEASE_CHECKLIST.md) lists the files intended for the
-repository and release assets.
+separately and are excluded from Python distributions.
+The [release checklist](RELEASE_CHECKLIST.md) lists the repository and
+release contents.

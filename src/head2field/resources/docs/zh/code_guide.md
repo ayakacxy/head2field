@@ -4,7 +4,7 @@
 
 [English](../en/code_guide.md) · [简体中文](code_guide.md)
 
-先阅读定义 v1 模型创建函数的 [`_spec.py`](../../src/head2field/_spec.py)、负责张量构建的 [`inputs.py`](../../src/head2field/inputs.py) 和组织预测流程的 [`inference.py`](../../src/head2field/inference.py)。完整网络位于 [`model.py`](../../src/head2field/model.py)。四个文件使用相同的坐标表示、电极顺序和查询点索引。
+沿预测流程阅读代码时，可依次查看 [`_spec.py`](../../src/head2field/_spec.py) 中的模型创建函数、[`inputs.py`](../../src/head2field/inputs.py) 中的张量构建，以及 [`inference.py`](../../src/head2field/inference.py) 中的推理流程。网络本身位于 [`model.py`](../../src/head2field/model.py)。这些文件中的坐标、电极顺序和查询行索引含义一致。
 
 <a id="package-map"></a>
 
@@ -23,7 +23,7 @@
 | `training/` | 训练数据与缓存格式、损失统计、物理损失采样数据、训练及恢复 |
 | `resource_paths.py` | 访问随包配置、schema、文档和权重文件 |
 
-顶层包导出 `Head2FieldV1`、`create_head2field_v1`、`load_head2field_v1_weights` 和 `Head2FieldInferenceSession`。预处理、FEM 和训练使用各自的子模块，只有调用这些功能时才加载相关依赖。
+顶层 API 提供 `Head2FieldV1`、`create_head2field_v1`、`load_head2field_v1_weights` 和 `Head2FieldInferenceSession`。预处理、FEM 和训练放在独立子模块中，调用相应功能时才加载求解器或科学数据读写依赖。
 
 <a id="prediction-flow"></a>
 
@@ -42,17 +42,17 @@ flowchart LR
     E --> O[写入数组与清单]
 ```
 
-`predict_prepared_subject_v1()` 负责读取输入并写出预测结果。推理会话以评估模式运行模型，缓存头部 FPN、全局被试特征、电极 token 和部分查询特征。后续查询分块复用已有头部和电极编码，因此不必重复计算。
+`predict_prepared_subject_v1()` 读取被试输入并写出预测文件。推理会话保存固定输入，以推理模式运行模型，缓存头部 FPN、全局被试特征、电极 token 和有限数量的查询特征。后续分块可以直接复用头部与电极编码。
 
-解码一个电极对批次时，程序只计算该批次涉及的电极。多个源电极共用同一参考时，会复用参考电极的特征和响应。电极首次出现的顺序和请求的电极对顺序保持不变，以减少显存占用。
+解码每个电极对批次时，程序先建立仅包含所需电极的紧凑电极库。共用参考电极的电极对复用同一特征和响应。电极库保持首次出现顺序，输出保持请求的电极对顺序，从而减少解码器内存占用。
 
-切换被试或模型权重时，请新建推理会话。已有缓存不会因输入文件被修改而自动更新。
+切换被试或权重时，请创建新会话。修改原始输入不会更新会话中已缓存的数值。
 
 <a id="tensor-and-coordinate-notation"></a>
 
 ## 张量与坐标记号
 
-`B` 表示被试、`U` 表示唯一电极、`P` 表示电极对、`Q` 表示查询、`C` 表示特征通道。文件级 v1 推理采用 `B=1`、`U=76`、`P=75`；底层 bundle 也支持选定或重复电极对。
+下表中，`B` 为被试数，`U` 为唯一电极数，`P` 为电极对数，`Q` 为查询点数，`C` 为特征通道数。从被试输入目录预测时，使用 `B=1`、`U=76`、`P=75`；底层 bundle 还可以包含选定或重复的电极对。
 
 | 数据 | 形状 | 含义 |
 | --- | --- | --- |
@@ -67,15 +67,15 @@ flowchart LR
 | 电极对电场 | `[B,P,Q,3]` | world-RAS 中的 `G(source)-G(reference)` |
 | 保存的预测 | `[75,Q,3]` | 单被试电极对电场，采用 1 mA 约定，单位 V/m |
 
-归一化坐标采用 `2 * ijk / (shape - 1) - 1`，对应 `align_corners=True`。128³ 编码器输入覆盖与 256³ 网格相同的物理范围。`sample_volume_at_points()` 将 i/j/k 反转为 k/j/i，以适应 PyTorch 采样网格的 W/H/D 顺序。即使网络使用 autocast，仿射计算仍保留原精度。
+坐标按 `2 * ijk / (shape - 1) - 1` 归一化，对应 `align_corners=True`。128³ 编码器输入覆盖与 256³ 网格相同的物理范围。`sample_volume_at_points()` 将 i/j/k 反转为 k/j/i，匹配 PyTorch 的 W/H/D 采样顺序。网络使用 autocast 时，仿射计算仍保持原精度。
 
-解剖原点为 GM/WM 查询位置的均值。相对坐标特征以此为原点；绝对坐标分支接受当前数据或物理分支指定的受控增强。
+相对坐标以 GM/WM 查询位置的均值为原点，绝对坐标分支则使用当前数据分支或物理分支的增强设置。
 
 <a id="reading-the-network"></a>
 
 ## 阅读网络
 
-在 `model.py` 中依次阅读：
+建议按以下顺序阅读 `model.py`：
 
 1. `SubjectGeometry`、`QueryCoordinateBundle` 和 `ElectrodeCoordinateBundle` 保存电极和查询点索引，并检查坐标转换。
 2. `AnatomyPyramidEncoder` 与 `CoarseGlobalAnatomyMixer` 生成解剖特征；`Head2FieldV1.encode_head()` 构建四层 FPN。
@@ -83,13 +83,13 @@ flowchart LR
 4. `decode_response_bank()` 对每个唯一电极执行共享解码；`gather_pair_field()` 根据电极对索引计算源响应与参考响应之差。
 5. `forward_bundled()` 评估一个分支；`forward_data_and_physics()` 为两个分支共享头部编码。
 
-各电极对都由共享响应相减得到，因此满足反对称和可加关系。对于同一查询点，所有电极响应加上同一个向量不会改变响应差，监督损失和物理损失因此都作用于电极对电场。结构参数见[模型结构](model_architecture.md)。
+共享响应相减使电极对电场满足反对称和可加关系。在同一查询点上，所有电极响应加上同一向量不会改变它们的差，因此监督损失与物理损失都作用于电极对电场。网络设置见[模型结构](model_architecture.md)。
 
 <a id="reading-the-training-path"></a>
 
 ## 阅读训练路径
 
-[`training/cli.py`](../../src/head2field/training/cli.py) 验证执行配置，建立数据集、完整 epoch 采样器、训练配置记录、step 函数和训练器。职责如下：
+[`training/cli.py`](../../src/head2field/training/cli.py) 检查执行配置后，创建数据集、完整 epoch 采样器、运行设置、step 函数和训练器。主要文件如下：
 
 | 文件 | 职责 |
 | --- | --- |
@@ -104,7 +104,9 @@ flowchart LR
 | `validation.py` | 按固定顺序验证并进行最终测试 |
 | `state.py` | 完整本地恢复状态及独立 RNG 流 |
 
-数据分支使用独立的随机数生成器控制增强和 dropout。物理分支不进行坐标增强，也不使用数据分支的随机数。有效采样位置和校准值来自 FEM 数据，模型预测不会改变它们。全局、径向和高场损失的分母按被试完整电场计算，每个查询分块只计算对应误差。Huber、MAE 和相对 L2 可用于观察训练过程。
+数据分支分别用独立随机数生成器控制增强和 dropout。物理分支使用未增强的坐标，不消耗数据分支的随机数；其有效采样位置和校准值由准备好的 FEM 数据确定，训练中保持不变。
+
+全局、径向和高场损失的分母根据被试完整电场计算，查询分块只贡献对应误差的分子。监督损失输出还包含 Huber、MAE 和相对 L2，供观察训练过程。
 
 运行命令及 checkpoint 内容见[训练说明](training.md)。
 
@@ -112,8 +114,8 @@ flowchart LR
 
 ## 修改与验证
 
-修改代码时，请检查参数名与形状、输入处理、电极和查询点顺序、坐标系、单位及默认参数是否仍然一致。模型结构变化需要配套的权重加载方法和配置。软件版本与数据格式版本分别管理。
+修改代码时，检查参数名和形状、输入处理、源与查询顺序、坐标系、单位以及默认设置。模型创建函数的变化可能影响权重兼容性；新增模型版本时，需要匹配的创建函数、配置和加载器。软件版本和数据格式版本分别管理。
 
-可读性重构应使用已有小模型测试，对比改动前后同一输入。源/查询索引变化应检查重排、重复 ID、共享参考和末尾不完整分块；损失变化应比较数值和梯度。开发命令与针对性验证见[贡献指南](../CONTRIBUTING_zh.md)。
+调整代码可读性时，可用已有小模型测试对比改动前后的同一输入。修改源或查询索引时，覆盖重排、重复 ID、共享参考和末尾不完整分块；修改损失时，同时比较数值与梯度。开发命令见[贡献指南](../CONTRIBUTING_zh.md)。
 
-公开 API 名称和 CLI 帮助使用英文，新增源码注释与 docstring 使用中文。中英文指南中的命令和参数设置应保持一致。更新随包文档后，同步 `src/head2field/resources/` 副本；已有打包测试逐字节核对这些副本。
+公开 API 名称和 CLI 帮助使用英文，新增源码注释和 docstring 使用中文。中英文指南的命令与科学设置保持一致。修改随包文档时，也更新 `src/head2field/resources/` 中的副本；打包测试会逐字节比较这些文件。

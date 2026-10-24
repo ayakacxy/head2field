@@ -2,10 +2,13 @@
 
 [English](fem_label_generation.md) · [简体中文](../zh/fem_label_generation.md)
 
-This workflow uses external SimNIBS 4.6.0 and prepared head inputs. Every
-destination must be new. The solver produces 75 source-to-Oz fields with the
-standard 76-electrode cap, circular electrodes of diameter 10 mm and thickness
-4 mm, and the complete isotropic tissue conductivity table.
+Generate training labels from a prepared subject and its CHARM head mesh using
+SimNIBS 4.6.0. The workflow computes 75 source-to-Oz fields with the standard
+76-electrode cap, circular electrodes of diameter 10 mm and thickness 4 mm,
+and the full isotropic tissue conductivity table. Choose new output directories.
+
+Use `plan` to print the simulation settings without writing files, `generate`
+to run the solver and export labels, and `validate` to check the result:
 
 ```bash
 head2field-fem plan --prepared-subject-dir prepared_subject --head-mesh head_model/subject.msh
@@ -15,21 +18,25 @@ head2field-fem generate   --prepared-subject-dir prepared_subject   --head-mesh 
 head2field-fem validate   --prepared-subject-dir prepared_subject   --fem-labels-dir fem_labels
 ```
 
-`export` can interpolate an existing validated solver run; inspect
-`head2field-fem export --help` for its HDF5, log, runtime-manifest and output
-arguments. Linear interpolation uses GM/WM queries. SimNIBS 1 A fields are
-scaled by 0.001 to source +1 mA and Oz −1 mA, with float32 world-RAS vectors
-in V/m.
+If a validated solver run already exists, use `export` to interpolate its
+fields at the GM/WM query points. Run `head2field-fem export --help` for the
+required HDF5, solver-log, runtime-manifest, and destination arguments.
+The interpolation is linear. SimNIBS fields for 1 A are multiplied by 0.001 to
+obtain the source `+1 mA`, Oz `-1 mA` convention. Labels contain float32
+world-RAS vectors in `V/m`.
 
-The run retains solver log, HDF5 and runtime MAT. Configured tissue
-conductivities are compared with the runtime MAT readback. Labels retain
-ordered source names, relative paths, file sizes, `[Q,3]` shapes, float32 dtype
-and finite values. New exports also store `query_ijk.npy` and compare its
-ordered coordinates directly with the prepared subject.
+Keep the solver log, HDF5 output, and runtime MAT file. Validation compares
+the conductivity settings with the values read back from the MAT file.
+The label manifest records source order, relative paths, file sizes, and
+`[Q,3]` array shapes. Arrays must be float32 and contain only finite values.
+Exports also save `query_ijk.npy`, whose ordered coordinates are compared
+directly with the prepared subject.
 
-Validation checks current, reference, field, units, tissues, source order,
-coordinates, conductivity, numerical arrays and safe paths. There is one
-validation mode. Older optional digest fields do not determine acceptance.
-Outputs publish atomically from sibling staging and never overwrite existing
-results. See [data formats and checks](data_contracts.md) and
-[FEM schema](../../schemas/fem_labels_v1.schema.json).
+The validator checks currents, Oz reference, field type, units, tissues,
+source order, coordinates, conductivity, arrays, and paths. It uses the same
+checks for every run; optional digests in older manifests are not acceptance
+criteria. Results are moved from a temporary sibling directory into the new
+destination only when complete. Existing results are never overwritten.
+
+See [data formats and checks](data_contracts.md) and the
+[FEM schema](../../schemas/fem_labels_v1.schema.json) for the stored fields.

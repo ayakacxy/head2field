@@ -2,14 +2,16 @@
 
 [English](inference.md) · [简体中文](../zh/inference.md)
 
-For installation and input preparation, start with [getting started](getting_started.md).
+Predict a subject's lead-field basis, then combine its source currents to
+calculate a stimulation field. For installation and input preparation, see
+[getting started](getting_started.md).
 
 ## Requirements
 
-Inference uses preprocessed subject data and loads the bundled Head2Field v1
-weights by default. The base installation is sufficient and does not load the
-preprocessing, FEM, or training pipelines, SimNIBS, SciPy, or h5py. FEM labels
-are not needed.
+Supply a prepared subject directory. The base installation includes the
+pretrained weights and supports inference without FEM labels. The prediction
+command does not import the preprocessing, FEM, or training pipelines, or
+require SimNIBS, SciPy, or h5py.
 
 ## CLI
 
@@ -22,35 +24,37 @@ head2field-predict \
   --electrode-batch-size 76
 ```
 
-Add `--weights /path/to/custom_v1.pth` to use a custom compatible bare state
-dictionary. The prepared-subject directory and any custom weight file must
-exist. The output path must not exist and must not be inside the prepared-subject
-directory. The command never overwrites an existing output directory.
+The command loads the bundled weights unless `--weights /path/to/custom_v1.pth`
+is supplied. Custom weights must be a compatible bare FP32 state dictionary.
+Inputs must already exist. Choose a new output directory outside the subject
+directory; existing outputs are not overwritten.
 
 | Argument | Default | Meaning |
 | --- | --- | --- |
-| `--prepared-subject` | Required | Directory containing `prepared_subject_v1.json` and its declared files |
+| `--prepared-subject` | Required | Directory containing `prepared_subject_v1.json` and the files it references |
 | `--output-dir` | Required | New directory outside the input directory |
-| `--weights` | Bundled pretrained v1 | Optional compatible bare FP32 state dictionary |
+| `--weights` | Bundled pretrained v1 | Compatible bare FP32 state dictionary for a custom model |
 | `--device` | `cpu` | PyTorch device, including `cuda` and `cuda:0` |
-| `--query-chunk-size` | `32768` | Maximum GM/WM query rows per inference chunk |
-| `--electrode-batch-size` | `76` | Limit for electrode encoding and source/reference pair decoding |
+| `--query-chunk-size` | `32768` | Maximum number of GM/WM query points in each chunk |
+| `--electrode-batch-size` | `76` | Batch limit for electrode encoding and source/reference decoding |
 
-For a smaller GPU, start with `--query-chunk-size 8192 --electrode-batch-size 8`.
-These settings bound network working memory; the full output still contains all
-75 sources and every prepared query. The CLI writes the field array through a
-NumPy memory map. Inference uses FP32 and evaluation mode.
+If GPU memory is limited, start with
+`--query-chunk-size 8192 --electrode-batch-size 8`. Smaller chunks reduce
+working memory; the output still covers all 75 sources and all prepared query
+points. The command uses FP32 evaluation and writes the field array through a
+NumPy memory map.
 
 ## Processing sequence
 
-1. Validate prepared arrays, spatial metadata, and electrode/query order.
-2. Build the v1 input tensors and strictly load the bundled or custom weights.
-3. Cache anatomical and electrode features in an inference session.
-4. Evaluate ordered query chunks and write all 75 pair fields to the memory map.
-5. Verify input files are unchanged, then write coordinates, pair records, and
-   the prediction manifest.
+1. Check the prepared arrays, spatial metadata, and electrode and query order.
+2. Build the model inputs and load the weights with strict key and shape checks.
+3. Cache anatomy and electrode features for this subject.
+4. Calculate the query chunks in order and write all 75 pair fields.
+5. Check that input files are unchanged, then save coordinates, electrode pairs,
+   and the prediction manifest.
 
-Chunk sizes are resource controls, not scientific profile changes.
+Chunk sizes affect memory use, not the electrode order, query order,
+coordinates, or units.
 
 ## Output tree
 
@@ -63,34 +67,34 @@ new-output-dir/
 └── prediction_manifest_v1.json
 ```
 
-`lead_field_float32.npy` has shape `[75, Q, 3]`, dtype float32, and axis order
-`[source, query, world_ras_component]`. Components follow world-RAS. The field
-unit is `V/m` for the `+1 mA` source and `-1 mA` Oz reference convention.
+`lead_field_float32.npy` is a float32 `[75, Q, 3]` array. Its axes are
+`[source, query, world_ras_component]`, with components `[Ex,Ey,Ez]` in
+world-RAS. Values are in `V/m` for source `+1 mA` and Oz `-1 mA`.
 
 | File | Interpretation |
 | --- | --- |
 | `lead_field_float32.npy` | `[75,Q,3]` world-RAS vectors in the manifest's source order |
 | `query_ijk.npy` | `[Q,3]` int32 canonical-grid indices matching the query axis |
-| `query_world_ras_mm.npy` | `[Q,3]` float32 world-RAS locations in millimeters |
+| `query_world_ras_mm.npy` | `[Q,3]` float32 world-RAS positions in millimetres |
 | `electrode_pairs.json` | Ordered source/Oz names, coordinates, and +1/-1 mA currents |
-| `prediction_manifest_v1.json` | Input/weight/output metadata, axes, units, and `source_names` |
+| `prediction_manifest_v1.json` | Input, weight, and output metadata, axes, units, and `source_names` |
 
-The query axis contains the prepared GM/WM rows. It is not a flattened whole
-head grid; use `query_ijk.npy` when scattering values into a voxel volume.
+The query axis contains GM/WM points only. Use `query_ijk.npy` to place these
+rows into a voxel volume; do not reshape the array as a full head grid.
 
 ## Combine source currents
 
-For source currents `I_s` expressed in **mA**, the reusable basis gives:
+Express source currents `I_s` in **mA** and combine the basis as follows:
 
 ```text
 E(query) = sum_s I_s * basis[s, query]
 I_Oz = -sum_s I_s
 ```
 
-The numerical coefficient uses the 1 mA basis, so currents in amperes must be
-converted to mA before multiplication. Source current order follows the
-manifest's `source_names`; the reference is Oz. For example, F3 +2 mA and
-F4 -2 mA gives zero net Oz current:
+The basis is calculated for 1 mA, so convert currents in amperes to mA before
+multiplication. Follow the manifest's `source_names` order. Oz carries the
+negative sum of the source currents; F3 +2 mA and F4 -2 mA therefore gives zero
+net Oz current:
 
 ```python
 import json
@@ -111,12 +115,12 @@ field_V_per_m = np.einsum("p,pqc->qc", currents_mA, basis[:, :32768, :])
 print(field_V_per_m.shape, "Oz current (mA):", -currents_mA.sum())
 ```
 
-Combine vector components before computing field magnitudes. Preserve the
+Sum the vector components before calculating field magnitudes. Save the
 current vector, source order, and basis manifest with any derived field.
 
 ## Python API
 
-To create the same files and manifest as the CLI:
+To write the same files as the CLI:
 
 ```python
 from pathlib import Path
@@ -130,7 +134,7 @@ array_path = predict_prepared_subject_v1(
 )
 ```
 
-To stream selected queries without writing the complete basis:
+To process query chunks without writing the complete basis:
 
 ```python
 from pathlib import Path
@@ -161,20 +165,21 @@ for chunk in session.iter_predictions(rows, electrodes, query_chunk_size=32768):
     # chunk.row_indices 标识这些查询在 subject.gmwm_ijk 中的行。
 ```
 
-`Head2FieldInferenceSession` and the weight-loading factory are stable top-level
-exports. Prepared-subject construction and lower-level chunk orchestration
-are available through the corresponding implementation modules.
+`Head2FieldInferenceSession` and the weight loader are top-level package
+exports. Input construction and the lower-level chunk functions are available
+from the modules shown above.
 
-Move the model to the session device when loading it. Both `row_indices` and
-optional `pair_indices` preserve the supplied order. A chunk's prediction stays
-on that device until transferred to CPU. Consume or save chunks as they arrive;
-collecting GPU tensors retains their memory. Recreate the session after changing
-the model weights or subject data because its caches assume immutable inputs.
+Load the model on the same device as the session. `row_indices` and optional
+`pair_indices` keep their supplied order. Predictions stay on that device
+until you transfer them to CPU. Process or save each chunk as it arrives;
+keeping references to GPU tensors also keeps their memory allocated.
+Create a new session whenever the subject or model weights change, so that
+cached features match the data being predicted.
 
 ## Weights and reproducibility
 
-Use the bundled v1 state dictionary or compatible custom FP32 weights. Record
-its checksum together with the software version, prepared-input manifest, and
-chunk settings. See [weights](../../weights/README.md) for loading and format
-requirements, and [evaluation](paper_reproduction.md) for FEM comparisons and
+Use the bundled weights or a compatible custom FP32 state dictionary.
+Record the weight checksum, software version, input manifest, and chunk
+settings with the result. See [weights](../../weights/README.md) for loading
+requirements and [evaluation](paper_reproduction.md) for FEM comparisons and
 runtime measurements.

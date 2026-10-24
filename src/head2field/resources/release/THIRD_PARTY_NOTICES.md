@@ -4,12 +4,10 @@
 
 [English](THIRD_PARTY_NOTICES.md) · [简体中文](THIRD_PARTY_NOTICES_zh.md)
 
-This document records upstream dependencies and the materials included in
-software distributions. The project wheel and source distribution contain only this
-project's Python source, package resources (including pretrained v1 weights),
-documentation, and license files.
-They do not vendor third-party Python wheels, native libraries, datasets,
-templates, atlases, or SimNIBS source/binaries.
+The wheel and source archive contain Head2Field Python code, package resources
+(including pretrained weights), documentation, and license files.
+Third-party Python wheels, native libraries, datasets, templates, atlases,
+and SimNIBS source/binaries are installed or obtained separately.
 
 ## Runtime and optional dependencies
 
@@ -24,21 +22,22 @@ templates, atlases, or SimNIBS source/binaries.
 
 ## Development-only tools
 
-`pytest`, `jsonschema`, `Ruff`, `build`, `setuptools`, and `wheel` are used to
-test and package the software. They are not imported by the installed runtime.
-Record their versions and the applicable artifact license inventories when
+`pytest`, `jsonschema`, `Ruff`, `build`, `setuptools`, and `wheel` are used
+for testing and packaging and are not imported by the installed runtime.
+Record their versions and applicable artifact license inventories when
 preparing a release.
 
 ## What a release artifact contains
 
-- The wheel contains Python code, resources, and the allowlisted pretrained v1
+- The wheel contains Python code, resources, and the bundled pretrained v1
   `.pth` file with its checksum. Other checkpoints, training states, NIfTI,
   meshes, HDF5, NPY/NPZ, native libraries, and third-party datasets are excluded.
 - The source archive includes the same project materials and pretrained weights.
-- Bundled weights are a bare state dictionary with no optimizer, scheduler,
+- The bundled weights are a bare state dictionary with no optimizer, scheduler,
   participant identifier, or training-resume state.
 - Containers, Conda environments, wheelhouses, and standalone binaries have
-  separate dependency inventories; review their actual bundled license notices.
+  their own dependency inventories. Review the license notices of the
+  components they actually include.
 
 ## Authoritative upstream references
 
@@ -49,7 +48,6 @@ preparing a release.
 - [SciPy repository](https://github.com/scipy/scipy)
 - [h5py repository](https://github.com/h5py/h5py)
 
-The final release operator must compare this inventory with the actual wheel,
-source archive, bundled pretrained weights, and recorded build/install
-environment inventory. Any vendored or copied third-party material changes the
-conclusion and requires a new review.
+Before release, compare this list with the actual wheel, source archive,
+bundled weights, and build/install environment records. Review the inventory
+again when adding copied or vendored third-party materials.

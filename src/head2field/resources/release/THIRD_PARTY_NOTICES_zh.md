@@ -4,7 +4,9 @@
 
 [English](THIRD_PARTY_NOTICES.md) · [简体中文](THIRD_PARTY_NOTICES_zh.md)
 
-本文记录上游依赖及软件分发包所包含的材料。项目 wheel 和源码包仅包含本项目 Python 源码、包资源（含预训练 v1 权重）、文档和许可证文件，不内嵌第三方 Python wheel、原生库、数据集、模板、图谱或 SimNIBS 源码及二进制文件。
+wheel 和源码包包含 Head2Field 的 Python 代码、包资源（含预训练权重）、文档和许可证文件。
+第三方 Python wheel、原生库、数据集、模板、图谱，以及 SimNIBS 源码和二进制文件，
+均需另行安装或获取。
 
 <a id="runtime-and-optional-dependencies"></a>
 
@@ -23,16 +25,19 @@
 
 ## 仅用于开发的工具
 
-`pytest`、`jsonschema`、`Ruff`、`build`、`setuptools` 和 `wheel` 用于测试与打包，不由已安装运行时导入。准备发布时应记录其版本及对应产物的许可证清单。
+`pytest`、`jsonschema`、`Ruff`、`build`、`setuptools` 和 `wheel` 用于测试与打包，
+不由已安装运行时导入。准备发布时，记录这些工具的版本及对应产物的许可证清单。
 
 <a id="what-a-release-artifact-contains"></a>
 
 ## 发布包包含哪些文件
 
-- 项目 wheel 包含 Python 代码和随包提供的预训练 v1 `.pth` 资源及校验文件，排除其他 `.pth`、`.pt` 训练状态、NIfTI、网格、HDF5、NPY/NPZ、原生库和第三方数据集。
-- 项目源码包也只包含上述代码、文档和预训练权重。
-- 内置预训练模型为裸 state dictionary，不含优化器、调度器、参与者标识或训练恢复状态。
-- 容器、Conda 环境、wheelhouse 或独立二进制程序属于不同分发产品，需要重新检查所有传递依赖与内置原生库的实际许可证清单。
+- wheel 包含 Python 代码、资源、内置预训练 v1 `.pth` 文件及校验文件，
+  不含其他 `.pth`、`.pt` 训练状态、NIfTI、网格、HDF5、NPY/NPZ、原生库或第三方数据集。
+- 源码包包含同样的项目材料和预训练权重。
+- 内置权重是仅含模型参数的 state dictionary，不含优化器、调度器、参与者标识或训练恢复状态。
+- 容器、Conda 环境、wheelhouse 和独立二进制程序各有自己的依赖清单，
+  应检查实际包含的组件及其许可证声明。
 
 <a id="authoritative-upstream-references"></a>
 
@@ -45,4 +50,5 @@
 - [SciPy 仓库](https://github.com/scipy/scipy)
 - [h5py 仓库](https://github.com/h5py/h5py)
 
-最终发布人员应将此清单与实际 wheel、源码包、内置预训练权重及构建/安装环境记录对照。复制或内嵌新的第三方材料会改变这一结论，需要重新审查。
+发布前，将此清单与实际 wheel、源码包、内置权重及构建/安装环境记录逐项对照。
+新增复制或内嵌的第三方材料时，重新检查清单。

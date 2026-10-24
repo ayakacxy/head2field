@@ -2,10 +2,10 @@
 
 [English](README.md) · [简体中文](README_zh.md)
 
-These generators create small, non-anatomical inputs. They contain no real
-participant image, identifier, coordinate, label, or derived data. Always write
-generated files to a new directory excluded from version control. For local
-development, use an ignored task directory under `.work/`.
+Use these small, non-anatomical datasets to check installation and software
+workflows. They contain no real participant images, identifiers, coordinates,
+labels, or derived data. Write generated files to a new directory excluded
+from version control; local development can use a task directory under `.work/`.
 
 ## Preprocessing branch inputs
 
@@ -20,16 +20,16 @@ python -m head2field.preprocessing canonicalize \
   --output-dir generated/synthetic-canonical
 ```
 
-The generator also writes a strict 76-name cap override for adapter tests. Its
-coordinates lie on a synthetic sphere. Do not run CHARM/FEM on these files and
-interpret the result as anatomy or scientific validation.
+The generator also creates a cap override with the required 76 names and
+coordinates on a synthetic sphere for adapter tests. These inputs do not
+represent a head and cannot establish the accuracy of CHARM segmentation or
+FEM fields.
 
 ## Training installation and resume smoke
 
-The CLI example below also works after installing the wheel. Make the bundled
-configuration files available using the
+This example works from a source checkout or after a wheel installation.
+The checkout includes `configs/`; for a wheel installation, first follow the
 [configuration access guide](../docs/en/getting_started.md#configuration-files-after-wheel-installation).
-Source checkouts already include `configs/`.
 
 ```bash
 head2field-make-synthetic-training \
@@ -45,13 +45,14 @@ head2field-train \
   --output-dir generated/synthetic-run
 ```
 
-The dataset has one fictional training subject and one fictional validation
-subject with disjoint groups, the fixed 75-source order, and analytic arrays on
-an 8-cube grid. The runner uses a test-only small network and CPU FP32. It
-exercises and checks the install, training-step, state, RNG, sampler, and resume
-machinery. It does not train the full pretrained architecture or measure
-field-prediction accuracy.
+The dataset contains one fictional training subject and one fictional
+validation subject in disjoint groups. It uses the fixed 75-source order
+and analytic arrays on an 8-cube grid.
 
-The standalone script
-`generate_synthetic_training_dataset.py` creates the same dataset when the CLI
-entry point has not yet been installed.
+The runner uses a small test-only CPU FP32 network to check installation,
+training steps, saved state, RNG state, sampling, and resume.
+It does not train the full pretrained architecture or measure field-prediction
+accuracy.
+
+If the CLI is not installed, `generate_synthetic_training_dataset.py` creates
+the same dataset.

@@ -4,15 +4,14 @@
 
 [English](SOURCE_PROVENANCE.md) · [简体中文](SOURCE_PROVENANCE_zh.md)
 
-The model, preprocessing, FEM-label, and training components originate from
-the Head2Field research codebase and are maintained here as a standalone Python
-package. This guide describes the current module responsibilities and external
-integrations. For tensor dimensions and execution flow, see the
+Head2Field is maintained as a standalone Python package developed from the
+Head2Field research codebase. The table below maps its components to the
+source tree. Tensor dimensions and execution flow are described in the
 [code guide](en/code_guide.md).
 
 ## Package components
 
-Paths below are relative to the repository root.
+All paths are relative to the repository root.
 
 | Component | Main source paths | Responsibility |
 | --- | --- | --- |
@@ -27,36 +26,35 @@ Paths below are relative to the repository root.
 
 ## Validation and outputs
 
-Loaders validate the actual arrays, geometry, tissue conductivities, source/query
-order, file sizes, and units. Each workflow has a defined manifest and produces
-new output directories. Training resume verifies the saved configuration and
-dataset records. See [data formats](en/data_contracts.md) for the schemas and
-[inference](en/inference.md) for output interpretation.
+Loaders check arrays, geometry, tissue conductivities, source/query order,
+file sizes, and units. Each workflow records its inputs and outputs in a
+manifest and writes results to a new directory. Resuming training also checks
+the saved configuration and dataset records.
 
-The model factory and weight loader share the v1 parameter keys and tensor
-shapes. Software, model, and data-schema versions are tracked independently.
-See the [model card](MODEL_CARD.md) and [weights](../weights/README.md) for
-compatibility and intended use.
+The model factory and weight loader use the same v1 parameter names and tensor
+shapes. Software, model, and data-schema versions are recorded separately.
+See [data formats](en/data_contracts.md) for schema fields,
+[inference](en/inference.md) for outputs, and the [model card](MODEL_CARD.md)
+and [weights](../weights/README.md) for compatibility and intended use.
 
 ## External integrations
 
-PyTorch, NumPy, and NiBabel provide the base tensor and imaging runtime. SciPy
-and h5py are optional dependencies for preprocessing and FEM data handling.
-SimNIBS/CHARM 4.6.0 is installed separately and accessed through the
-preprocessing and FEM adapters.
+The base runtime uses PyTorch, NumPy, and NiBabel. SciPy and h5py provide
+optional preprocessing and FEM data support. SimNIBS/CHARM 4.6.0 is installed
+separately and called through the preprocessing and FEM adapters.
 
-The package does not embed external runtimes, native libraries, templates,
-atlases, or participant datasets. Dependencies and their license notices are
-listed in [third-party notices](THIRD_PARTY_NOTICES.md); dataset terms and
-acknowledgements are in [data use](DATA_USE.md).
+External runtimes, native libraries, templates, atlases, and participant
+datasets are not bundled. The [third-party notices](THIRD_PARTY_NOTICES.md)
+list dependency licenses; [data use](DATA_USE.md) covers dataset terms and
+acknowledgements.
 
 ## Distributed materials
 
-The wheel contains project code, configuration/schema resources, documentation,
-and the bundled tensor-only v1 weights. The source archive also includes tests
-and example generators. Participant data, generated FEM or prediction arrays,
+The wheel includes project code, configuration/schema resources, documentation,
+and tensor-only pretrained weights. The source archive also includes tests and
+example generators. Participant data, generated FEM and prediction arrays,
 training caches, logs, and complete resume states are stored separately.
 
-Tests and examples use fictional identifiers and generated arrays. Development
-and packaging instructions are in [Contributing](CONTRIBUTING.md) and the
-[release checklist](RELEASE_CHECKLIST.md).
+Tests and examples use fictional identifiers and generated arrays.
+See [Contributing](CONTRIBUTING.md) for development and the
+[release checklist](RELEASE_CHECKLIST.md) for packaging.

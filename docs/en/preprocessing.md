@@ -2,11 +2,10 @@
 
 [English](preprocessing.md) · [简体中文](../zh/preprocessing.md)
 
-The preprocessing workflow converts a caller-supplied T1 image into a validated
-`prepared_subject_v1` directory through canonicalization, external CHARM head
-modeling, and prepared-subject assembly. Install the `preprocess` extra and
-SimNIBS 4.6.0 in the active environment. Templates and participant inputs are
-provided by the user.
+Prepare a T1 image for Head2Field in three steps: align and resample the image,
+build a CHARM head model, then assemble the model inputs. Install the
+`preprocess` extra and SimNIBS 4.6.0 in the environment running the command.
+Supply the T1 image and, for raw non-HCP data, an orientation template.
 
 ## End-to-end command
 
@@ -20,27 +19,24 @@ head2field-prepare \
   --prepared-output-dir prepared_subject
 ```
 
-The three output paths must be new, distinct, and non-nested. There is no
-overwrite option. A completed earlier stage is retained if a later stage fails;
-the tool never deletes or rewrites a caller-owned result.
+Use three new, distinct output directories; none may be inside another.
+The command has no overwrite option. If a stage fails, results from completed
+stages remain available, and existing user results are not deleted or replaced.
 
-The same workflow is available as
-`head2field.preprocessing.prepare_subject`.
+The Python entry point is `head2field.preprocessing.prepare_subject`.
 
 ## Stage 1: canonical T1
 
-Choose one of two processing profiles:
+Select the profile that matches your input:
 
-- `hcp_acpc` assumes ACPC alignment and distortion correction are already
-  complete. It estimates no rotation and only centers/resamples the head onto
-  the fixed grid.
-- `non_hcp_raw` requires a caller-provided orientation template and performs
-  exactly one six-degree-of-freedom rigid estimate. Scaling and shear are
-  rejected.
+- `hcp_acpc`: for data with ACPC alignment and distortion correction already
+  completed. It centers and resamples the head without estimating a rotation.
+- `non_hcp_raw`: for a raw T1 image. Supply an orientation template for one
+  six-degree-of-freedom rigid alignment; scaling and shear are rejected.
 
-Both profiles produce a float32, 256 x 256 x 256, 1 mm RAS T1 with affine
-translation `[-128, -128, -128]`, a QC PNG, and a path-redacted manifest.
-The lower-level command is:
+Both profiles write a float32, 256 x 256 x 256, 1 mm RAS T1 with affine
+translation `[-128, -128, -128]`, a QC PNG, and a manifest with paths redacted.
+To inspect the standalone canonicalization command, run:
 
 ```bash
 python -m head2field.preprocessing canonicalize --help
@@ -48,66 +44,66 @@ python -m head2field.preprocessing canonicalize --help
 
 ## Stage 2: external CHARM
 
-The default adapter imports SimNIBS 4.6.0 from the user's environment and calls
-`simnibs.segmentation.charm_main.run`. A version mismatch or missing runtime is
-an error; there is no fallback segmentation. CHARM uses resources from that
-external installation. No runtime or atlas is copied into this package.
+Head2Field calls `simnibs.segmentation.charm_main.run` from the installed
+SimNIBS 4.6.0 package. A missing installation or a different version stops the
+run. CHARM uses its own installed resources; this package does not bundle the
+CHARM runtime or atlas, or substitute another segmentation method.
 
-CHARM first writes the head model to a temporary sibling directory. The result
-is saved to the destination after the following files and version information
-have been checked:
+CHARM writes to a temporary directory beside the destination. Before moving
+the completed result into place, Head2Field checks:
 
-- the caller's canonical T1 outside the head-model directory;
-- CHARM's own `T1.nii.gz` and `final_tissues.nii.gz` inside that directory;
-- exactly one root-level `*.msh` head mesh; and
-- the exact external SimNIBS version, which must be `4.6.0`.
+- the canonical T1 supplied from outside the head-model directory;
+- CHARM's `T1.nii.gz` and `final_tissues.nii.gz` within that directory;
+- exactly one `*.msh` head mesh at the directory root; and
+- the installed SimNIBS version, which must be `4.6.0`.
 
-The `charm_runtime_v1.json` manifest records the T1, tissues, unique head mesh,
-and SimNIBS version for this run. Assembly and FEM commands use this record to
-check that their inputs come from the same head model.
+`charm_runtime_v1.json` records these images, the head mesh, and the software
+version. The assembly and FEM steps use it to confirm that their inputs belong
+to the same head model.
 
-The head-model directory keeps the full CHARM output. Inference inputs are
-stored in a separate prepared-subject directory.
+Keep the complete CHARM output in its head-model directory. The next step
+creates a separate, smaller subject directory for model inputs.
 
 ## Stage 3: prepared-subject assembly
 
-This stage uses the prepared T1, `final_tissues.nii.gz`, and CHARM head-model
-directory. It checks `charm_runtime_v1.json` to confirm that the input files
-belong to the same head-model run.
+Assembly reads the prepared T1, `final_tissues.nii.gz`, and CHARM head-model
+directory. It first checks their association in `charm_runtime_v1.json`.
 
-Electrode positions are read from `eeg_positions/EEG10-10_UI_Jurak_2007.csv` by
-default. The file must contain the standard 76 electrode names and world-RAS
-coordinates without NaN or Inf. Output follows the fixed order with Oz first.
-Separate name and coordinate files are usually unnecessary. To supply your own,
-pass both `--electrode-names-json` and `--electrode-coords-mm-npy`; the same
-name and coordinate checks apply. Assembly then:
+By default, electrode positions come from
+`eeg_positions/EEG10-10_UI_Jurak_2007.csv`. This file must contain the standard
+76 names and finite world-RAS coordinates. The saved cap uses the fixed order
+with Oz first. To provide electrode files yourself, pass both
+`--electrode-names-json` and `--electrode-coords-mm-npy`; the same checks apply.
 
-1. Validates canonical volume geometry and tissue values.
-2. Copies the prepared T1 and tissues and creates float32 scalar conductivity.
-3. Saves GM/WM voxel queries in C-order and the ordered cap files.
-4. Writes and validates the prepared manifest, checks source files are unchanged,
-   and publishes the new directory from staging.
+Assembly then:
 
-The prepared directory copies only its prepared T1 and final-tissues inputs; it
-does not copy or silently select a mesh. The mesh stays in the external CHARM
-head-model directory. Downstream FEM planning and execution must provide that
-same unique root mesh and revalidate it against both `charm_runtime_v1.json` and
-the prepared manifest's `head_model_provenance`.
+1. Checks the volume grid, affine, and tissue labels.
+2. Copies the prepared T1 and tissue image and creates float32 scalar conductivity.
+3. Saves GM/WM voxel queries in C-order, along with the ordered cap files.
+4. Writes and validates the input manifest, checks that source files are
+   unchanged, and moves the completed subject directory into place.
 
-The lower-level API is
+The subject directory contains copies of the prepared T1 and tissue image, not
+the head mesh. For FEM planning and execution, pass the unique mesh from the
+same CHARM directory. It is checked against `charm_runtime_v1.json` and the
+input manifest's `head_model_provenance`.
+
+The lower-level Python function is
 `head2field.preprocessing.assemble_prepared_subject`.
 
 ## Small public inputs
 
-Examples and tests can call
-`head2field.preprocessing.synthetic.write_synthetic_preparation_inputs`.
-It writes a deterministic 32-cube ellipsoid T1, a second orientation image, and
-synthetic spherical coordinates for the fixed 76 names. These are non-anatomical
-inputs and are not evidence that CHARM or FEM output is scientifically valid.
+For examples and software tests,
+`head2field.preprocessing.synthetic.write_synthetic_preparation_inputs`
+generates a deterministic 32-cube ellipsoid T1, an orientation image, and
+synthetic spherical coordinates for the 76 standard names. These
+non-anatomical inputs are intended for testing software operation, not for
+measuring head-model or FEM accuracy.
 
 ## Testing
 
-Synthetic tests check profile selection, rigid-alignment calls, query order,
+Synthetic tests cover profile selection, rigid-alignment calls, query order,
 input preservation, and agreement between manifests and files. They also check
-that failures retain existing results and that outputs are not overwritten.
-Actual CHARM segmentation needs a separate run with its SimNIBS version recorded.
+that failures preserve earlier results and that existing outputs are not
+overwritten. To assess CHARM segmentation, run it on an actual subject and
+record the SimNIBS version.
