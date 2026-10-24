@@ -91,8 +91,9 @@ and generalization require appropriate evaluation data.
 
 ## Documentation language
 
-Use English for public API names and CLI help, and Chinese for new source
-comments and docstrings.
+Use English for code, comments, docstrings, public API names, CLI messages,
+and primary documentation. Provide Simplified Chinese translations of the
+public guides.
 
 Technical guides live in `docs/en/` and `docs/zh/` with matching filenames.
 Project guides in `docs/`, root READMEs, example guides, and weight guides have
@@ -105,14 +106,8 @@ their source copies. The [documentation index](en/README.md) lists the guides.
 
 ## Attribution
 
-The project author and maintainer is [ayakacxy](https://github.com/ayakacxy).
-Codex (OpenAI) assists with development, documentation, and verification.
-Record the actual commit author. For commits authored by ayakacxy with Codex
-participation, add this trailer after a blank line:
-
-```text
-Co-authored-by: Codex <codex@openai.com>
-```
+Use your own Git author information when submitting changes. Preserve existing
+copyright and license notices when adapting code.
 
 ## Data, dependencies, and licensing
 

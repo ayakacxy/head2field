@@ -153,8 +153,9 @@ reordering, repeated IDs, shared references, and partial chunks. If a loss
 changes, compare both values and gradients. Development commands are in
 [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-Use English for public API names and CLI help, and Chinese for new source
-comments and docstrings. Keep the English and Chinese guides consistent,
+Use English for code, comments, docstrings, public API names, CLI messages,
+and primary documentation. Provide Chinese translations of the public guides.
+Keep the English and Chinese guides consistent,
 including commands and scientific settings. When editing a shipped document,
 update its copy in `src/head2field/resources/` too; the packaging tests compare
 these copies byte for byte.

@@ -85,7 +85,8 @@ python -m compileall -q src tests examples
 
 ## 文档语言
 
-公开 API 名称和 CLI 帮助使用英文，新增源码注释与 docstring 使用中文。
+代码、注释、docstring、公开 API 名称、CLI 信息和主文档均使用英文。
+公开指南另外提供简体中文翻译。
 
 技术指南放在 `docs/en/` 和 `docs/zh/`，两边使用相同文件名。
 `docs/` 中的项目说明、根目录 README、示例和权重说明保留 `_zh.md` 对应文件。
@@ -99,13 +100,7 @@ python -m compileall -q src tests examples
 
 ## 贡献者署名
 
-项目作者与维护者是 [ayakacxy](https://github.com/ayakacxy)，Codex（OpenAI）协助开发、
-文档整理和验证。提交时保留实际作者信息。对于 ayakacxy 作为作者且 Codex 参与的提交，
-在提交说明末尾空一行后加入：
-
-```text
-Co-authored-by: Codex <codex@openai.com>
-```
+提交时使用贡献者本人的 Git 作者信息。改编已有代码时，请保留原有版权和许可证声明。
 
 <a id="data-dependencies-and-licensing"></a>
 

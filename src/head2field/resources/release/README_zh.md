@@ -202,7 +202,7 @@ head2field-train \
 [更新记录](docs/CHANGELOG_zh.md)汇总软件变更。维护者发布安装包时可使用
 [发布清单](docs/RELEASE_CHECKLIST_zh.md)。
 
-公开文档均提供英文和简体中文版本，可通过每页顶部的链接切换语言。
+项目以英文为主，公开指南同时提供简体中文翻译。可通过每页顶部的链接切换语言。
 
 <a id="citation"></a>
 

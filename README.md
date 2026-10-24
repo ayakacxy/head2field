@@ -219,8 +219,8 @@ describes the package components, and the [changelog](docs/CHANGELOG.md) records
 software changes. Maintainers can follow the [release checklist](docs/RELEASE_CHECKLIST.md)
 when preparing a distribution.
 
-Documentation is available in English and Simplified Chinese. Use the language
-link at the top of a guide to switch between them.
+English is the project's primary language. Simplified Chinese translations are
+available for all public guides; use the language link at the top to switch.
 
 <a id="citation"></a>
 
