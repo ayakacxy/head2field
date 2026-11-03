@@ -6,9 +6,8 @@
 
 When using Head2Field in research, cite:
 
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+> **Head2Field: A Structural MRI-Based Neural Field for Subject-Specific
+> Lead-Field Prediction in Transcranial Electrical Stimulation**
 
 Authors, in order: Xiayu Chen, Xiaoxiao Wang, Zixin Cao, Senlin Liu,
 Zhichen Liu, Zhengyang Wang, Huiyu Du, Bensheng Qiu, and Yanming Wang.

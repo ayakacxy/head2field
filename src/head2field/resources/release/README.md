@@ -4,7 +4,7 @@
 
 [English](README.md) · [简体中文](README_zh.md)
 
-**Continuous neural fields for subject-specific tES lead-field prediction.**
+**A structural MRI-based neural field for subject-specific TES lead-field prediction.**
 
 [![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-orange?style=flat)](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0)
 [![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat&logo=python&logoColor=white)](pyproject.toml)
@@ -14,7 +14,7 @@
 
 [Installation](#installation) · [Quick start](#quick-start) · [Documentation](#documentation) · [Training and evaluation](#reproduction) · [Citation](#citation)
 
-🧠 **Structural MRI** · ⚡ **Continuous neural fields** · 🧭 **World-RAS vectors** · 🔬 **Physics-guided training**
+🧠 **Structural MRI** · ⚡ **Neural field prediction** · 🧭 **World-RAS vectors** · 🔬 **Physics regularization**
 
 </div>
 
@@ -43,9 +43,8 @@ and shared-response differences. Click the figure for the vector PDF.
 
 This repository contains the **official PyTorch implementation** of:
 
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+> **Head2Field: A Structural MRI-Based Neural Field for Subject-Specific
+> Lead-Field Prediction in Transcranial Electrical Stimulation**
 
 The package includes **Head2Field v1** (`Head2FieldV1`), pretrained weights, and
 commands for preprocessing, FEM label generation, training, and inference. The
@@ -56,6 +55,15 @@ white-matter query locations. The output has shape `[75, Q, 3]`, with world-RAS
 components `[Ex, Ey, Ez]` in `V/m`. Each field corresponds to `+1 mA` at the source
 and `-1 mA` at Oz. The [model card](docs/MODEL_CARD.md) describes the training
 settings, intended use, and limitations.
+
+In the manuscript's 40-subject test cohort, increasing training from 10 to
+128 subjects reduced mean full-field relative L2 error from 0.118 to 0.070;
+omitting physics regularization increased it to 0.078. TIS plans optimized
+on the predicted basis achieved 94.9% of FEM-optimized focality under FEM
+re-evaluation. With inputs prepared, lead-field generation was approximately
+100 times faster in the representative benchmark; the estimated end-to-end
+speedup was 4.7 times. Experimental conditions and downstream results are in
+[evaluation and reproducibility](docs/en/paper_reproduction.md#manuscript-results).
 
 ## ✨ Features
 
@@ -237,9 +245,9 @@ If you use Head2Field in research, cite the manuscript with this BibTeX entry:
   author = {Chen, Xiayu and Wang, Xiaoxiao and Cao, Zixin and
             Liu, Senlin and Liu, Zhichen and Wang, Zhengyang and
             Du, Huiyu and Qiu, Bensheng and Wang, Yanming},
-  title  = {{Head2Field}: A Continuous Neural Field for Subject-Specific
-            Multi-Electrode Transcranial Electrical Stimulation
-            Lead-Field Prediction from Structural {MRI}},
+  title  = {{Head2Field}: A Structural {MRI}-Based Neural Field for
+            Subject-Specific Lead-Field Prediction in Transcranial
+            Electrical Stimulation},
   note   = {Manuscript}
 }
 ```

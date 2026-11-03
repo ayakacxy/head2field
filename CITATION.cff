@@ -1,18 +1,19 @@
 cff-version: 1.2.0
 message: >-
-  If you use Head2Field, please cite the paper "Head2Field: A Continuous Neural
-  Field for Subject-Specific Multi-Electrode Transcranial Electrical Stimulation
-  Lead-Field Prediction from Structural MRI", this software, and the relevant methods and data sources.
+  If you use Head2Field, please cite the paper "Head2Field: A Structural
+  MRI-Based Neural Field for Subject-Specific Lead-Field Prediction in
+  Transcranial Electrical Stimulation", this software, and the relevant methods and data sources.
 title: "Head2Field"
 type: software
 version: "0.1.0"
 authors:
   - name: "ayakacxy"
 abstract: >-
-  Official implementation of Head2Field for continuous, subject-specific,
-  multi-electrode tES lead-field prediction from structural MRI. Includes
-  T1-derived head preparation, Oz-referenced SimNIBS FEM labels, physics-guided
-  CUDA training, and label-free inference.
+  Official implementation of Head2Field, a structural MRI-based neural field
+  for subject-specific TES lead-field prediction from head conductivity maps
+  and electrode coordinates. Includes T1-derived head preparation,
+  Oz-referenced SimNIBS FEM labels, physics-regularized CUDA training,
+  and inference without FEM solves.
 keywords:
   - Head2Field
   - transcranial electrical stimulation
@@ -24,9 +25,8 @@ license: GPL-3.0-only
 preferred-citation:
   type: article
   title: >-
-    Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-    Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-    MRI
+    Head2Field: A Structural MRI-Based Neural Field for Subject-Specific
+    Lead-Field Prediction in Transcranial Electrical Stimulation
   authors:
     - family-names: "Chen"
       given-names: "Xiayu"

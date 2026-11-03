@@ -4,7 +4,7 @@
 
 [English](README.md) · [简体中文](README_zh.md)
 
-从结构 MRI 预测个体特异性多电极 TES 先导场的连续神经场。
+**基于结构 MRI 的神经场模型，用于个体化 TES 导联场预测。**
 
 [![Release v0.1.0](https://img.shields.io/badge/release-v0.1.0-orange?style=flat)](https://github.com/ayakacxy/head2field/releases/tag/v0.1.0)
 [![Python >=3.11](https://img.shields.io/badge/Python-%3E%3D3.11-3776AB?style=flat&logo=python&logoColor=white)](pyproject.toml)
@@ -14,7 +14,7 @@
 
 [快速上手](#quick-start) · [文档](#documentation) · [训练与评估](#reproduction) · [引用](#citation)
 
-🧠 **结构 MRI** · ⚡ **连续神经场** · 🧭 **World-RAS** · 🔬 **物理引导训练**
+🧠 **结构 MRI** · ⚡ **神经场预测** · 🧭 **World-RAS** · 🔬 **物理正则化**
 
 [![Head2Field 项目概览](docs/assets/head2field-overview.png)](docs/assets/head2field-overview.pdf)
 
@@ -35,15 +35,19 @@ Head2Field 根据 T1 MRI 提取的头部结构、组织电导率和电极坐标�
 
 本项目是以下论文的**官方实现**：
 
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+> **Head2Field: A Structural MRI-Based Neural Field for Subject-Specific
+> Lead-Field Prediction in Transcranial Electrical Stimulation**
 
-中文参考译名：**Head2Field：从结构 MRI 预测个体特异性多电极 tES 先导场的连续神经场**。
+中文参考译名：**Head2Field：基于结构磁共振影像的神经场模型用于个体化经颅电刺激导联场预测**。
 
 安装包提供 **Head2Field v1**（`Head2FieldV1`）、预训练权重，以及预处理、FEM 标签生成、训练和推理命令。
 模型配置见 [head2field_v1.json](configs/head2field_v1.json)，Python 包名为 `head2field`。
-数据划分、FEM 对比和计时方法见[评估与可重复实验](docs/zh/paper_reproduction.md)。
+
+论文在 40 名测试受试者中观察到：训练规模从 10 人增至 128 人时，平均全场相对 L2 误差从
+0.118 降至 0.070；去除物理正则化后，误差增至 0.078。用预测导联场优化的 TIS 方案经 FEM
+复评后，达到 FEM 优化方案聚焦性得分的 94.9%。在输入已准备好的代表性基准中，导联场生成
+约加速 100 倍，估计端到端加速约 4.7 倍。实验条件和下游结果见
+[评估与可重复实验](docs/zh/paper_reproduction.md#manuscript-results)。
 
 <a id="features"></a>
 
@@ -218,9 +222,9 @@ head2field-train \
   author = {Chen, Xiayu and Wang, Xiaoxiao and Cao, Zixin and
             Liu, Senlin and Liu, Zhichen and Wang, Zhengyang and
             Du, Huiyu and Qiu, Bensheng and Wang, Yanming},
-  title  = {{Head2Field}: A Continuous Neural Field for Subject-Specific
-            Multi-Electrode Transcranial Electrical Stimulation
-            Lead-Field Prediction from Structural {MRI}},
+  title  = {{Head2Field}: A Structural {MRI}-Based Neural Field for
+            Subject-Specific Lead-Field Prediction in Transcranial
+            Electrical Stimulation},
   note   = {Manuscript}
 }
 ```

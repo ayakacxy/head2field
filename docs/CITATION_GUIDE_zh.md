@@ -10,9 +10,8 @@
 
 在科研中使用 Head2Field 时，请引用：
 
-> **Head2Field: A Continuous Neural Field for Subject-Specific Multi-Electrode
-> Transcranial Electrical Stimulation Lead-Field Prediction from Structural
-> MRI**
+> **Head2Field: A Structural MRI-Based Neural Field for Subject-Specific
+> Lead-Field Prediction in Transcranial Electrical Stimulation**
 
 作者顺序为：Xiayu Chen、Xiaoxiao Wang、Zixin Cao、Senlin Liu、Zhichen Liu、
 Zhengyang Wang、Huiyu Du、Bensheng Qiu 和 Yanming Wang。

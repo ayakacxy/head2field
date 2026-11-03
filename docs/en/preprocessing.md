@@ -6,6 +6,11 @@ Prepare a T1 image for Head2Field in three steps: align and resample the image,
 build a CHARM head model, then assemble the model inputs. Install the
 `preprocess` extra and SimNIBS 4.6.0 in the environment running the command.
 Supply the T1 image and, for raw non-HCP data, an orientation template.
+This command runs the full SimNIBS `charm` workflow, including surface
+reconstruction and meshing, so the head model can also be used for FEM labels.
+Lead-field prediction reads the assembled voxel inputs and electrode
+coordinates without FEM solves. The manuscript's timing scopes are described
+in [runtime measurements](paper_reproduction.md#measuring-runtime).
 
 ## End-to-end command
 

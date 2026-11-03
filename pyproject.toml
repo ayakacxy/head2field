@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "head2field"
 version = "0.1.0"
-description = "Head2Field: continuous neural fields for subject-specific tES lead-field prediction"
+description = "Head2Field: A Structural MRI-Based Neural Field for Subject-Specific Lead-Field Prediction in Transcranial Electrical Stimulation"
 readme = "README.md"
 requires-python = ">=3.11"
 license = "GPL-3.0-only"

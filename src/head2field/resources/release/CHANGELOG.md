@@ -6,6 +6,10 @@ Software and model versions are recorded separately.
 
 ## Unreleased
 
+- Update the manuscript title in both languages, citation metadata, and the
+  package description to match the current manuscript.
+- Report cohort results, TIS FEM re-evaluation, electrode-position comparisons,
+  and benchmark conditions; align the model card and packaged documentation.
 - Reorganize the guides around installation, input preparation, training,
   inference, evaluation, and runtime measurement.
 - Clarify weight compatibility and workflow instructions, and synchronize

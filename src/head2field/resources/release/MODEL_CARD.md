@@ -90,43 +90,42 @@ default. See [weights](../weights/README.md) and [data use](DATA_USE.md).
 
 ## Intended use
 
-Head2Field is intended for non-clinical TES research, method comparison,
-software validation, and reproducible field-modeling experiments.
-Its inputs require careful handling of imaging coordinates, electrode order,
-currents, and units, as well as numerical comparison with suitable reference
-results.
-
-The package predicts a lead-field basis. Stimulation-current optimization,
-treatment planning, and uncertainty quantification are outside its scope.
+Head2Field supports TES field modeling, method comparisons, and research on
+individualized stimulation planning. The predicted basis can be reused for
+tDCS field synthesis and TIS envelope prediction. The manuscript's TIS
+optimization experiments use this basis in a separate downstream optimizer.
+The package provides basis prediction and a Python query API for these uses.
 
 ## Limitations
 
-- Correct array shapes alone do not establish correct tissue labels,
-  conductivities, affines, electrode/query order, or units.
-- The model uses fixed isotropic scalar conductivities. Anisotropic
-  conductivity, different input channels, or different tissue labels require
-  a compatible model and new weights.
-- Performance has not been established for every scanner, imaging protocol,
-  age group, pathology, lesion, implant, or unusual anatomy.
-- Outputs do not include calibrated uncertainty estimates.
-- Predictions have not been validated for diagnosis, treatment selection,
-  patient safety decisions, or autonomous clinical control.
+- The evaluated cohort comprised 200 healthy adults aged 22–36 years from
+  WU-Minn HCP. Training, validation, and test partitions contained 128, 32,
+  and 40 subjects, with families kept together.
+- Tissue conductivities were fixed and isotropic.
+- Electrodes had a fixed cylindrical geometry: 10 mm diameter and 4 mm
+  thickness. Position-generalization experiments tested 5–20 mm displacements.
+- The model returns field vectors; outputs do not include uncertainty estimates.
 
-Use subject-appropriate FEM comparisons when the required accuracy extends
-beyond the established evaluation conditions.
+The manuscript identifies broader age and patient cohorts, anisotropic
+conductivity, and variable electrode geometry as directions for further study.
 
 ## Reproducibility and evaluation
+
+The manuscript reports a mean full-field relative L2 error of 0.070 for the
+128-subject model, compared with 0.078 without physics regularization. Errors
+at the tested unseen electrode positions were 0.069–0.070 without fine-tuning.
+TIS plans optimized using the predicted basis achieved 94.9% of FEM-optimized
+focality under FEM evaluation. The [evaluation guide](en/paper_reproduction.md#manuscript-results)
+records the cohort, comparisons, and runtime conditions.
 
 Synthetic tests cover weight/schema loading, coordinates, source and query
 ordering, preprocessing/FEM adapters, complete epochs, learning-rate
 scheduling, validation, early stopping, and local resume. CUDA FP16 operation
 has also been exercised with synthetic inputs.
 
-These tests check software behavior. To assess accuracy, generalization, or
-agreement with FEM, use the corresponding data split, preparation method,
-weights, and evaluation protocol. Access to participant data remains subject
-to the applicable terms; synthetic test results do not establish clinical
-validity.
+Synthetic tests exercise software behavior. The manuscript's field-accuracy
+results use the cohort data, trained models, and FEM comparisons described
+in the evaluation guide.
 
 ## Data and acknowledgements
 

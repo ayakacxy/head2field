@@ -5,6 +5,9 @@
 [English](../en/preprocessing.md) · [简体中文](preprocessing.md)
 
 T1 预处理分为三步：对齐与重采样、生成 CHARM 头模型、整理模型输入。
+该命令执行完整的 SimNIBS `charm` 流程，包括表面重建和网格生成，所得头模型也用于 FEM 标签。
+导联场预测读取整理好的体素输入和电极坐标，无需求解 FEM。论文的计时范围见
+[运行时间测量](paper_reproduction.md#weight-and-performance-provenance)。
 请在运行命令的环境中安装 `preprocess` 可选依赖和 SimNIBS 4.6.0。
 T1 影像由用户准备；处理非 HCP 原始数据时，还需要方向模板。
 
